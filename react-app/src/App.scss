@@ -1,0 +1,23 @@
+.code-generator-wrapper {
+  padding: 10px 20px;
+  .MuiPaper-root {
+    padding: 20px;
+    &:not(:last-of-type) {
+      margin-bottom: 20px;
+    }
+  }
+  .MuiGrid-root {
+    .MuiFormControl-root {
+      width: 100%;
+    }
+  }
+  .form-wrapper {
+    margin-top: 20px;
+    position: relative;
+    .form-buttons {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+  }
+}
