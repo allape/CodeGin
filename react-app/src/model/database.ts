@@ -16,7 +16,7 @@ export interface Table {
   // 表名称
   name?: string;
   // 字段列表
-  fields: Field[];
+  fields?: Field[];
   // DDL
   ddl?: string;
 }

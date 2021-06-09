@@ -1,16 +1,11 @@
 import React, {useCallback, useContext, useEffect, useMemo, useState} from 'react';
-import {Button, CircularProgress, makeStyles} from '@material-ui/core';
-import {ButtonProps} from '@material-ui/core/Button/Button';
+import {makeStyles} from '@material-ui/core';
 
-export interface LoadingButtonProps extends ButtonProps {
-  loading?: boolean;
-}
-
-const useStyles = makeStyles({
-  root: {
+export const useStyles = makeStyles({
+  loadingContainer: {
     position: 'relative',
   },
-  loading: {
+  loadingProgress: {
     position: 'absolute',
     top: '50%',
     left: '50%',
@@ -19,17 +14,11 @@ const useStyles = makeStyles({
   },
 });
 
-export default function LoadingButton(props: LoadingButtonProps) {
-  const { loading } = props;
-  const classes = useStyles();
-  return <div className={classes.root}>
-    <Button {...props} disabled={loading || props.disabled}/>
-    {loading && <CircularProgress size={24} className={classes.loading} />}
-  </div>;
+export interface LoadingProps {
+  loading?: boolean;
 }
 
 export type LoadFunction = (key?: string) => string;
-
 export type LoadedFunction = (key: string) => boolean;
 
 /**
@@ -38,11 +27,11 @@ export type LoadedFunction = (key: string) => boolean;
  */
 export function useLoading(
   delay: number = 100
-): [ boolean, LoadFunction, LoadedFunction ] {
+): [boolean, LoadFunction, LoadedFunction] {
   const [loading, setLoading] = useState(false);
   const [count, plus] = useCounter();
 
-  const { load: globalLoad, loaded: globalLoaded } = useContext(LoadingContext);
+  const {load: globalLoad, loaded: globalLoaded} = useContext(LoadingContext);
 
   const setLoadingProxy = useCallback((loading: boolean) => {
     setLoading(loading);
@@ -97,20 +86,21 @@ export function useLoading(
   //   }
   // }, [withAutoClear, setLoading, queue]);
 
-  return [ loading, load, loaded ];
+  return [loading, load, loaded];
 }
 
 export type PlusFunction = () => void;
+
 /**
  * 计数器, 用于触发key更改的
  * @param initValue 初始值
  */
-export function useCounter(initValue: number = 0): [ number, PlusFunction ] {
+export function useCounter(initValue: number = 0): [number, PlusFunction] {
   const [count, setCount] = useState(initValue);
   const plus = useCallback(() => {
     setCount(c => c === Number.MAX_SAFE_INTEGER ? 1 : (c + 1));
   }, [setCount]);
-  return [ count, plus ];
+  return [count, plus];
 }
 
 export interface LoadingContextValue {

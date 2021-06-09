@@ -20,4 +20,12 @@
       align-items: center;
     }
   }
+  .text-with-icon {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    .icon {
+      margin: 0 5px;
+    }
+  }
 }

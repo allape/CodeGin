@@ -1,10 +1,14 @@
 import React, {FormEvent, useCallback, useMemo, useState} from 'react';
 import './App.scss';
-import {Button, Divider, Grid, List, ListItem, ListItemText, Paper, TextField, Typography} from "@material-ui/core";
+import {Divider, Grid, List, ListItem, ListItemText, Paper, TextField, Typography} from "@material-ui/core";
 import {Connection} from './model/connection';
-import Database from './model/database';
-import {connect, stringifyError} from './api/api';
-import LoadingButton, {useLoading} from './component/LoadingButton';
+import Database, {Field, Schema, Table} from './model/database';
+import {connect, getFields, getTables, stringifyError} from './api/api';
+import LoadingButton from './component/loading/LoadingButton';
+import {useLoading} from './component/loading/loading';
+import LoadingContainer from './component/loading/LoadingContainer';
+import {Alert, AlertTitle} from '@material-ui/lab';
+import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -18,54 +22,161 @@ export default function App() {
 
   const [loading, load, loaded] = useLoading();
 
+  // 连接信息表单错误信息
+  const [errors, setErrors] = useState<Record<string, boolean>>({});
+  // 需要而外提示的错误信息
+  const [errorMessage, setEM] = useState('');
+
   // 连接信息
-  const [conn, setConn] = useState<Connection>({});
+  const [, setConn] = useState<Connection>({});
   // 连接了的数据库信息
   const [database, setDatabase] = useState<Database | undefined>(undefined);
+  // 当前选中的schema
+  const [schema, setSchema] = useState<Schema | undefined>(undefined);
+  // table列表
+  const [tables, setTables] = useState<Table[] | undefined>(undefined);
+  // 当前选中的table
+  const [table, setTable] = useState<Table | undefined>(undefined);
+  // fields列表
+  const [fields, setFields] = useState<Field[] | undefined>(undefined);
+
+  const promiseHandler = useCallback<(<T> (promise: Promise<T>) => Promise<T>)>((promise: Promise<any>) => {
+    const rk = load();
+    return new Promise((resolve, reject) => {
+      promise
+        .then(db => {
+          setEM('');
+          resolve(db);
+        })
+        .catch(e => {
+          setEM(stringifyError(e));
+          reject(e);
+        })
+        .finally(() => {
+          loaded(rk);
+        });
+    });
+  }, [load, loaded]);
 
   const onConnectionInfoSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();
 
     const target: any = e.target;
-    const data = Object.keys(DEFAULT_VALUE).reduce((p, c) => ({ ...p, [c]: target[c]?.value || (DEFAULT_VALUE as any)[c] }), {});
+    const data: Connection = Object.keys(DEFAULT_VALUE).reduce((p, c) => ({ ...p, [c]: target[c]?.value }), {});
+
+    const newErrors: Record<string, boolean> = {};
+
+    if (!data.host) {
+      newErrors.host = true;
+    } else if (!data.port) {
+      newErrors.port = true;
+    }
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length) {
+      return;
+    }
 
     setConn(data);
 
-    const rk = load();
-    connect(data).then(db => {
+    setDatabase(undefined);
+    promiseHandler(connect(data)).then(db => {
       setDatabase(db);
-    }).catch(e => {
-      stringifyError(e);
-    }).finally(() => {
-      loaded(rk);
     });
-  }, [setConn, setDatabase]);
+  }, [promiseHandler]);
 
-  const cachedDatabaseEle = useMemo(() => database ?
-    <>
-      <Typography color="textSecondary">{database.name}</Typography>
-      <Divider />
-      <List component="nav">
-        {database.schemas.map((schema, index) => <ListItem key={index} button>
-          <ListItemText primary={schema.name} />
-        </ListItem>)}
-      </List>
-    </> :
-    <Typography color={'textSecondary'} align={'center'}>请先建立连接</Typography>, [database]);
+  const onDatabaseClick = useCallback((schema: Schema) => {
+    setSchema(schema);
+    promiseHandler(getTables(schema.name!)).then(tables => setTables(tables));
+  }, [promiseHandler]);
+
+  const onTableClick = useCallback((table: Table) => {
+    setTable(table);
+    promiseHandler(getFields(table.name!)).then(fields => setFields(fields));
+  }, [promiseHandler]);
+
+  const ele = useMemo(() =>
+    <LoadingContainer style={{padding: '5px'}} loading={loading}>
+      {database ?
+        <>
+          <Typography color="textSecondary">{database.name}</Typography>
+          <Divider />
+          {tables ?
+            <>
+              {fields ?
+                <List component="nav">
+                  <ListItem button onClick={() => setFields(undefined)}>
+                    <ListItemText primary={
+                      <div className="text-with-icon">
+                        <KeyboardBackspaceIcon className="icon"/>
+                        <span>返回</span>
+                      </div>
+                    } secondary={table?.name} />
+                  </ListItem>
+                  {fields.map((field, index) =>
+                    <ListItem key={index} button>
+                      <ListItemText style={{paddingLeft: '20px'}} primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`} />
+                    </ListItem>)}
+                </List>
+                :
+                <List component="nav">
+                  <ListItem button onClick={() => setTables(undefined)}>
+                    <ListItemText primary={
+                      <div className="text-with-icon">
+                        <KeyboardBackspaceIcon className="icon"/>
+                        <span>返回</span>
+                      </div>
+                    } />
+                  </ListItem>
+                  {tables.map((table, index) =>
+                    <ListItem key={index} button onClick={() => onTableClick(table)}>
+                      <ListItemText style={{paddingLeft: '20px'}} primary={`${schema?.name}.${table.name}`} />
+                    </ListItem>)}
+                </List>
+              }
+            </>
+            :
+            <List component="nav">
+              {database.schemas.map((schema, index) =>
+                <ListItem key={index} button
+                          onClick={() => onDatabaseClick(schema)}>
+                  <ListItemText primary={schema.name} />
+                </ListItem>)}
+            </List>
+          }
+        </>
+        :
+        <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>请先建立连接</Typography>
+      }
+    </LoadingContainer>,
+    [
+      loading,
+      onDatabaseClick, onTableClick,
+      database, schema, tables, table, fields,
+    ]
+  );
 
   return (
     <div className="code-generator-wrapper">
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
+          <Alert severity={errorMessage ? 'error' : 'success'}>
+            <AlertTitle>{errorMessage ? 'Error' : 'Success'}</AlertTitle>
+            {errorMessage || 'Everything is ok!'}
+          </Alert>
           <Paper>
             <Typography variant="h6" color="textPrimary">连接信息</Typography>
             <form className={`form-wrapper`} onSubmit={onConnectionInfoSubmit}>
               <Grid container spacing={2}>
                 <Grid item xs={8}>
-                  <TextField label="Host" name={'host'} defaultValue={DEFAULT_VALUE.host} />
+                  <TextField required label="Host" name={'host'} defaultValue={DEFAULT_VALUE.host}
+                             error={errors.host} helperText={'Host is required'} />
                 </Grid>
                 <Grid item xs={4}>
-                  <TextField type={'number'} label="Port" name={'port'} defaultValue={DEFAULT_VALUE.port!.toString()} />
+                  <TextField required type={'number'} label="Port" name={'port'}
+                             defaultValue={DEFAULT_VALUE.port!.toString()}
+                             error={errors.port} helperText={'Port is required'} />
                 </Grid>
                 <Grid item xs={6}>
                   <TextField label="Username" name={'username'} defaultValue={DEFAULT_VALUE.username} />
@@ -85,7 +196,7 @@ export default function App() {
           </Paper>
           <Paper className="paper-item">
             <Typography variant="h6" color="textPrimary">数据库信息</Typography>
-            {cachedDatabaseEle}
+            {ele}
           </Paper>
         </Grid>
       </Grid>
