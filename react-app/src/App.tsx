@@ -9,6 +9,9 @@ import {useLoading} from './component/loading/loading';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
+import MonacoEditor from 'react-monaco-editor';
+import 'monaco-editor/min/vs/editor/editor.main.css';
+import * as monacoEditor from 'monaco-editor';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -21,6 +24,8 @@ const DEFAULT_VALUE: Connection = {
 export default function App() {
 
   const [loading, load, loaded] = useLoading();
+
+  // region 数据库
 
   // 连接信息表单错误信息
   const [errors, setErrors] = useState<Record<string, boolean>>({});
@@ -97,65 +102,82 @@ export default function App() {
   }, [promiseHandler]);
 
   const ele = useMemo(() =>
-    <LoadingContainer style={{padding: '5px'}} loading={loading}>
-      {database ?
-        <>
-          <Typography color="textSecondary">{database.name}</Typography>
-          <Divider />
-          {tables ?
-            <>
-              {fields ?
-                <List component="nav">
-                  <ListItem button onClick={() => setFields(undefined)}>
-                    <ListItemText primary={
-                      <div className="text-with-icon">
-                        <KeyboardBackspaceIcon className="icon"/>
-                        <span>返回</span>
-                      </div>
-                    } secondary={table?.name} />
-                  </ListItem>
-                  {fields.map((field, index) =>
-                    <ListItem key={index} button>
-                      <ListItemText style={{paddingLeft: '20px'}} primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`} />
-                    </ListItem>)}
-                </List>
-                :
-                <List component="nav">
-                  <ListItem button onClick={() => setTables(undefined)}>
-                    <ListItemText primary={
-                      <div className="text-with-icon">
-                        <KeyboardBackspaceIcon className="icon"/>
-                        <span>返回</span>
-                      </div>
-                    } />
-                  </ListItem>
-                  {tables.map((table, index) =>
-                    <ListItem key={index} button onClick={() => onTableClick(table)}>
-                      <ListItemText style={{paddingLeft: '20px'}} primary={`${schema?.name}.${table.name}`} />
-                    </ListItem>)}
-                </List>
-              }
-            </>
-            :
-            <List component="nav">
-              {database.schemas.map((schema, index) =>
-                <ListItem key={index} button
-                          onClick={() => onDatabaseClick(schema)}>
-                  <ListItemText primary={schema.name} />
-                </ListItem>)}
-            </List>
-          }
-        </>
-        :
-        <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>请先建立连接</Typography>
-      }
-    </LoadingContainer>,
+      <LoadingContainer style={{padding: '5px'}} loading={loading}>
+        {database ?
+          <>
+            <Typography color="textSecondary">{database.name}</Typography>
+            <Divider />
+            {tables ?
+              <>
+                {fields ?
+                  <List component="nav">
+                    <ListItem button onClick={() => setFields(undefined)}>
+                      <ListItemText primary={
+                        <div className="text-with-icon">
+                          <KeyboardBackspaceIcon className="icon"/>
+                          <span>返回</span>
+                        </div>
+                      } secondary={table?.name} />
+                    </ListItem>
+                    {fields.map((field, index) =>
+                      <ListItem key={index} button>
+                        <ListItemText style={{paddingLeft: '20px'}} primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`} />
+                      </ListItem>)}
+                  </List>
+                  :
+                  <List component="nav">
+                    <ListItem button onClick={() => setTables(undefined)}>
+                      <ListItemText primary={
+                        <div className="text-with-icon">
+                          <KeyboardBackspaceIcon className="icon"/>
+                          <span>返回</span>
+                        </div>
+                      } />
+                    </ListItem>
+                    {tables.map((table, index) =>
+                      <ListItem key={index} button onClick={() => onTableClick(table)}>
+                        <ListItemText style={{paddingLeft: '20px'}} primary={`${schema?.name}.${table.name}`} />
+                      </ListItem>)}
+                  </List>
+                }
+              </>
+              :
+              <List component="nav">
+                {database.schemas.map((schema, index) =>
+                  <ListItem key={index} button
+                            onClick={() => onDatabaseClick(schema)}>
+                    <ListItemText primary={schema.name} />
+                  </ListItem>)}
+              </List>
+            }
+          </>
+          :
+          <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>请先建立连接</Typography>
+        }
+      </LoadingContainer>,
     [
       loading,
       onDatabaseClick, onTableClick,
       database, schema, tables, table, fields,
     ]
   );
+
+  // endregion
+
+  // region 文本编辑器
+
+  const tplEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: typeof monacoEditor) => {
+
+  }, []);
+
+  const editorOptions = useMemo<monacoEditor.editor.IStandaloneEditorConstructionOptions>(() => ({
+    minimap: {
+      enabled: false,
+    },
+    language: 'javascript',
+  }), []);
+
+  // endregion
 
   return (
     <div className="code-generator-wrapper">
@@ -197,6 +219,15 @@ export default function App() {
           <Paper className="paper-item">
             <Typography variant="h6" color="textPrimary">数据库信息</Typography>
             {ele}
+          </Paper>
+        </Grid>
+        <Grid item xs={12} lg={8} xl={9}>
+          <Paper>
+            <Typography variant="h6" color="textPrimary">模板(javascript)</Typography>
+            <div className="editor-wrapper">
+              <MonacoEditor height={500} language={'javascript'}
+                            options={editorOptions} editorDidMount={tplEditorDidMount}/>
+            </div>
           </Paper>
         </Grid>
       </Grid>
