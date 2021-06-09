@@ -10,7 +10,6 @@ import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import MonacoEditor from 'react-monaco-editor';
-import 'monaco-editor/min/vs/editor/editor.main.css';
 import * as monacoEditor from 'monaco-editor';
 
 // 默认回填的数据
@@ -167,7 +166,7 @@ export default function App() {
   // region 文本编辑器
 
   const tplEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: typeof monacoEditor) => {
-
+    console.log('tplEditorDidMount', editor, monaco);
   }, []);
 
   const editorOptions = useMemo<monacoEditor.editor.IStandaloneEditorConstructionOptions>(() => ({
@@ -225,7 +224,7 @@ export default function App() {
           <Paper>
             <Typography variant="h6" color="textPrimary">模板(javascript)</Typography>
             <div className="editor-wrapper">
-              <MonacoEditor height={500} language={'javascript'}
+              <MonacoEditor height={500}
                             options={editorOptions} editorDidMount={tplEditorDidMount}/>
             </div>
           </Paper>
