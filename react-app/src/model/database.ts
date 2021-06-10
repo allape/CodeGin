@@ -30,4 +30,6 @@ export interface Field {
   nullable?: boolean;
   // 默认值
   defaultValue?: any;
+  // 备注信息
+  comment?: string;
 }

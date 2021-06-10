@@ -5,7 +5,7 @@ import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
 import {connect, getFields, getTables, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
-import {useLoading} from './component/loading/loading';
+import {useCounter, useLoading} from './component/loading/loading';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
@@ -20,9 +20,48 @@ const DEFAULT_VALUE: Connection = {
   password: undefined,
 };
 
+// 预设的依赖内容
+const PRESET_DEFINITIONS = `
+/**
+ * 将下划线字符串转为驼峰
+ * @param {string} str 要被转换的字符串
+ * @param {boolean} firstUpper 首字母是否大写
+ */
+export function toCamelCase(str, firstUpper = false) {
+  if (!str) return '';
+  const pieces = str.split(/_/g);
+  let firstDidUpper = false;
+  return pieces.map((value => {
+    if (value) {
+      if (!firstDidUpper) {
+        firstDidUpper = true;
+        if (!firstUpper) return value;
+      }
+      return value[0].toUpperCase() + value.substring(1);
+    }
+    return undefined;
+  })).filter(i => !!i).reduce((p, c) => p + c, '');
+}
+
+/**
+ * 将驼峰字符串转为下划线
+ * @param {string} str 要被转换的字符串
+ * @param {boolean} upper 是否转换为大写
+ */
+export function toUnderlineCase(str, upper = false) {
+  return str ? str.replace(/([A-Z])/g, '_$1')[upper ? 'toUpperCase' : 'toLowerCase']() : '';
+}
+`;
+
 export default function App() {
 
   const [loading, load, loaded] = useLoading();
+
+  // 重新加载编辑器的依赖内容
+  const [editorReloadKey, reloadEditor] = useCounter();
+
+  // 注入到编辑器的依赖内容
+  const [definitions, setDefinitions] = useState('');
 
   // region 数据库
 
@@ -100,6 +139,30 @@ export default function App() {
     promiseHandler(getFields(table.name!)).then(fields => setFields(fields));
   }, [promiseHandler]);
 
+  // 将当前显示字段的表的数据导入编辑器依赖
+  const setEditorDefinitions = useCallback(() => {
+    if (!fields) {
+      setEM('当前未加载任何Table, 无法导入依赖!');
+      return;
+    }
+
+    setDefinitions(`
+// 数据库数据
+export const database = ${JSON.stringify(database)};
+// 表数据
+export const table = ${JSON.stringify(table)};
+// 字段列表
+export const fields = ${JSON.stringify(fields)};
+
+// 预设的方法
+${PRESET_DEFINITIONS}
+`);
+    reloadEditor();
+  }, [
+    database, table, fields,
+    reloadEditor, setEM,
+  ]);
+
   const ele = useMemo(() =>
       <LoadingContainer style={{padding: '5px'}} loading={loading}>
         {database ?
@@ -117,6 +180,9 @@ export default function App() {
                           <span>返回</span>
                         </div>
                       } secondary={table?.name} />
+                    </ListItem>
+                    <ListItem button onClick={() => setEditorDefinitions()}>
+                      <ListItemText primary="将该表数据注入至模板编辑器依赖" secondary="该操作将覆盖已有依赖" />
                     </ListItem>
                     {fields.map((field, index) =>
                       <ListItem key={index} button>
@@ -156,7 +222,7 @@ export default function App() {
       </LoadingContainer>,
     [
       loading,
-      onDatabaseClick, onTableClick,
+      onDatabaseClick, onTableClick, setEditorDefinitions,
       database, schema, tables, table, fields,
     ]
   );
@@ -165,16 +231,38 @@ export default function App() {
 
   // region 文本编辑器
 
+  const tplEditorWillMount = useCallback((monaco: typeof monacoEditor) => {
+    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      target: monaco.languages.typescript.ScriptTarget.ES2016,
+      allowNonTsExtensions: true,
+      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+      module: monaco.languages.typescript.ModuleKind.CommonJS,
+      noEmit: true,
+      typeRoots: ["node_modules/@types"],
+    });
+    monaco.languages.typescript.javascriptDefaults.addExtraLib(
+      definitions || PRESET_DEFINITIONS,
+      'file:///node_modules/dbtpl/index.js'
+    );
+
+    const model = monaco.editor.createModel(
+      `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nconsole.log();`,
+      'javascript',
+      monaco.Uri.parse(`file:///main-${Date.now()}.js`)
+    );
+
+    return {
+      model,
+      minimap: {
+        enabled: false,
+      },
+      language: 'javascript',
+    };
+  }, [definitions]);
   const tplEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: typeof monacoEditor) => {
     console.log('tplEditorDidMount', editor, monaco);
+    // editor.setValue(`import {aa} from 'dbtpl';\nconsole.log();`);
   }, []);
-
-  const editorOptions = useMemo<monacoEditor.editor.IStandaloneEditorConstructionOptions>(() => ({
-    minimap: {
-      enabled: false,
-    },
-    language: 'javascript',
-  }), []);
 
   // endregion
 
@@ -183,8 +271,8 @@ export default function App() {
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
           <Alert severity={errorMessage ? 'error' : 'success'}>
-            <AlertTitle>{errorMessage ? 'Error' : 'Success'}</AlertTitle>
-            {errorMessage || 'Everything is ok!'}
+            <AlertTitle>{errorMessage ? '错误' : '正常'}</AlertTitle>
+            {errorMessage || '一切正常'}
           </Alert>
           <Paper>
             <Typography variant="h6" color="textPrimary">连接信息</Typography>
@@ -222,10 +310,11 @@ export default function App() {
         </Grid>
         <Grid item xs={12} lg={8} xl={9}>
           <Paper>
-            <Typography variant="h6" color="textPrimary">模板(javascript)</Typography>
+            <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
             <div className="editor-wrapper">
-              <MonacoEditor height={500}
-                            options={editorOptions} editorDidMount={tplEditorDidMount}/>
+              <MonacoEditor key={editorReloadKey} height={500}
+                            editorWillMount={tplEditorWillMount}
+                            editorDidMount={tplEditorDidMount}/>
             </div>
           </Paper>
         </Grid>
