@@ -32,31 +32,37 @@ export default function CodeEditor(props: CodeEditorProps) {
     }
   }, [editor, value]);
 
-  useEffect(() => {
-    if (ref.current) {
-      const editor = me.editor.create(
-        ref.current,
-        {
-          ...options,
-          ...(willMount ? willMount(me) : undefined),
-        },
-      );
-      editor.addCommand(me.KeyMod.CtrlCmd | me.KeyCode.KEY_S, () => {
-        if (onChange) {
-          onChange(editor.getValue());
-        }
-      });
-      setEditor(oldEditor => {
-        try {
-          // oldEditor?.getModel()?.dispose();
-          oldEditor?.dispose();
-        } catch (e) {
-          console.error('error on disposing editor:', e);
-        }
-        return editor;
-      });
-    }
-  }, [options, willMount, didMount, onChange]);
+  useEffect(
+    () => {
+      if (ref.current) {
+        const editor = me.editor.create(
+          ref.current,
+          {
+            ...options,
+            ...(willMount ? willMount(me) : undefined),
+          },
+        );
+        editor.addCommand(me.KeyMod.CtrlCmd | me.KeyCode.KEY_S, () => {
+          if (onChange) {
+            onChange(editor.getValue());
+          }
+        });
+        setEditor(oldEditor => {
+          try {
+            if (oldEditor) {
+              oldEditor.getModel()?.dispose();
+              oldEditor.dispose();
+            }
+          } catch (e) {
+            console.error('error on disposing editor:', e);
+          }
+          return editor;
+        });
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [options, willMount, didMount, onChange],
+  );
 
   useEffect(() => {
     if (didMount && editor) {

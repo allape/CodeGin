@@ -6,8 +6,10 @@ import {
   Grid,
   List,
   ListItem,
-  ListItemText, MenuItem,
-  Paper, Select,
+  ListItemText,
+  MenuItem,
+  Paper,
+  Select,
   Tab,
   Tabs,
   TextField,
@@ -17,7 +19,7 @@ import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
 import {connect, getFields, getTables, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
-import {useCounter, useLoading} from './component/loading/loading';
+import {useLoading} from './component/loading/loading';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
@@ -71,11 +73,6 @@ const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.t
 export default function App() {
 
   const [loading, load, loaded] = useLoading();
-
-  // 重新加载结果编辑器的依赖内容
-  const [rk, plus] = useCounter();
-  // 重新加载编辑器的依赖内容
-  const [editorReloadKey, reloadEditor] = useCounter();
 
   // 注入到编辑器的依赖内容
   const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS);
@@ -176,10 +173,9 @@ export const fields = ${JSON.stringify(fields, undefined, 4)};
 // 预设的方法
 ${PRESET_DEFINITIONS}
 `);
-    reloadEditor();
   }, [
     database, table, fields,
-    reloadEditor, setEM,
+    setEM,
   ]);
 
   const ele = useMemo(() =>
@@ -252,10 +248,7 @@ ${PRESET_DEFINITIONS}
 
   const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const tplEditorWillMount = useCallback((monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
-    console.log('tplEditorWillMount');
-
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      outFile: 'file:///',
       target: monaco.languages.typescript.ScriptTarget.ES2016,
       moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       module: monaco.languages.typescript.ModuleKind.CommonJS,
@@ -275,14 +268,7 @@ ${PRESET_DEFINITIONS}
   }, [definitions]);
   const tplEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor, monaco: typeof me) => {
     console.log('tplEditorDidMount', editor, monaco);
-    setTplEditor(oldEditor => {
-      try {
-        oldEditor?.dispose();
-      } catch (e) {
-        console.error('error on dispose template editor:', e);
-      }
-      return editor;
-    });
+    setTplEditor(editor);
   }, []);
 
   // endregion
@@ -292,56 +278,31 @@ ${PRESET_DEFINITIONS}
   const [tab, setTab] = useState(0);
   const handleTabChange = useCallback((e, nv) => setTab(nv), []);
 
-  const [, setDepEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
-
   const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');
   const [resultType, setResultType] = useState('javascript');
 
-  const depEditorWillMount = useCallback((/*monaco: typeof me*/): me.editor.IStandaloneEditorConstructionOptions => {
-    return {
-      value: definitions || PRESET_DEFINITIONS,
-      readOnly: true,
-      minimap: {
-        enabled: false,
-      },
-      language: 'javascript',
-    };
-  }, [definitions]);
-  const depEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor) => {
-    setDepEditor(oldEditor => {
-      try {
-        oldEditor?.dispose();
-      } catch (e) {
-        console.error('error on dispose dependency editor:', e);
-      }
-      return editor;
-    });
-  }, []);
+  const depEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
+    value: definitions,
+    readOnly: true,
+    minimap: {
+      enabled: false,
+    },
+    language: 'javascript',
+  }), [definitions]);
 
   const onResultTypeChange = useCallback(e => {
     setResultType(e.target.value);
     setResult(resultEditor?.getValue() || '');
-    plus();
-  }, [plus, resultEditor]);
-  const resultEditorWillMount = useCallback((/*monaco: typeof me*/): me.editor.IStandaloneEditorConstructionOptions => {
-    return {
-      value: `${result}`,
-      minimap: {
-        enabled: false,
-      },
-      language: resultType,
-    };
-  }, [result, resultType]);
+  }, [resultEditor]);
+  const resultEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
+    minimap: {
+      enabled: false,
+    },
+    language: resultType,
+  }), [resultType]);
   const resultEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor) => {
-    setResultEditor(oldEditor => {
-      try {
-        oldEditor?.dispose();
-      } catch (e) {
-        console.error('error on dispose result editor:', e);
-      }
-      return editor;
-    });
+    setResultEditor(editor);
   }, []);
 
   const printResult = useCallback(() => {
@@ -358,7 +319,6 @@ ${PRESET_DEFINITIONS}
           setEM('没有找到return语句');
         } else {
           setResult(r);
-          plus();
           setEM('');
         }
       } catch (e) {
@@ -367,7 +327,7 @@ ${PRESET_DEFINITIONS}
     } else {
       setEM('编辑器暂时未初始化完成');
     }
-  }, [definitions, tplEditor, plus]);
+  }, [definitions, tplEditor]);
 
   // endregion
 
@@ -442,18 +402,16 @@ ${PRESET_DEFINITIONS}
                     </Select>
                   </div>
                 </div>
-                {/*<div className="editor-wrapper">*/}
-                {/*  {tab === 0 ? <>*/}
-                {/*    <MonacoEditor key={editorReloadKey} height={500}*/}
-                {/*                  editorDidMount={depEditorDidMount}*/}
-                {/*                  editorWillMount={depEditorWillMount}/>*/}
-                {/*  </> : <></>}*/}
-                {/*  {tab === 1 ? <>*/}
-                {/*    <MonacoEditor key={rk} height={500}*/}
-                {/*                  editorWillMount={resultEditorWillMount}*/}
-                {/*                  editorDidMount={resultEditorDidMount}/>*/}
-                {/*  </> : <></>}*/}
-                {/*</div>*/}
+                <div className="editor-wrapper">
+                  {/*{tab === 0 ? <>*/}
+                  {/*  <CodeEditor value={definitions} options={depEditorOptions}/>*/}
+                  {/*</> : <></>}*/}
+                  {/*{tab === 1 ? <>*/}
+                  {/*  <CodeEditor value={result}*/}
+                  {/*              options={resultEditorOptions}*/}
+                  {/*              didMount={resultEditorDidMount}/>*/}
+                  {/*</> : <></>}*/}
+                </div>
               </Paper>
             </Grid>
           </Grid>
