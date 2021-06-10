@@ -1,0 +1,17 @@
+{
+  "name": "code-generator",
+  "version": "1.0.0",
+  "description": "代码生成器",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "code-generator"
+  ],
+  "author": "ALLAPE",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^13.1.2"
+  }
+}
