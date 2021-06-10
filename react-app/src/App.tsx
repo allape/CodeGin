@@ -1,6 +1,18 @@
 import React, {FormEvent, useCallback, useMemo, useState} from 'react';
 import './App.scss';
-import {Divider, Grid, List, ListItem, ListItemText, Paper, TextField, Typography} from "@material-ui/core";
+import {
+  Button,
+  Divider,
+  Grid,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  Tab,
+  Tabs,
+  TextField,
+  Typography
+} from "@material-ui/core";
 import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
 import {connect, getFields, getTables, stringifyError} from './api/api';
@@ -11,6 +23,7 @@ import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import MonacoEditor from 'react-monaco-editor';
 import * as monacoEditor from 'monaco-editor';
+import {EditorConstructionOptions} from 'react-monaco-editor/src/types';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -57,11 +70,13 @@ export default function App() {
 
   const [loading, load, loaded] = useLoading();
 
+  // 重新加载结果编辑器的依赖内容
+  const [rk, plus] = useCounter();
   // 重新加载编辑器的依赖内容
   const [editorReloadKey, reloadEditor] = useCounter();
 
   // 注入到编辑器的依赖内容
-  const [definitions, setDefinitions] = useState('');
+  const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS);
 
   // region 数据库
 
@@ -148,11 +163,13 @@ export default function App() {
 
     setDefinitions(`
 // 数据库数据
-export const database = ${JSON.stringify(database)};
+export const database = ${JSON.stringify(database, undefined, 4)};
+
 // 表数据
-export const table = ${JSON.stringify(table)};
+export const table = ${JSON.stringify(table, undefined, 4)};
+
 // 字段列表
-export const fields = ${JSON.stringify(fields)};
+export const fields = ${JSON.stringify(fields, undefined, 4)};
 
 // 预设的方法
 ${PRESET_DEFINITIONS}
@@ -231,7 +248,8 @@ ${PRESET_DEFINITIONS}
 
   // region 文本编辑器
 
-  const tplEditorWillMount = useCallback((monaco: typeof monacoEditor) => {
+  const [tplEditor, setTplEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor | undefined>(undefined);
+  const tplEditorWillMount = useCallback((monaco: typeof monacoEditor): EditorConstructionOptions => {
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ES2016,
       allowNonTsExtensions: true,
@@ -241,12 +259,12 @@ ${PRESET_DEFINITIONS}
       typeRoots: ["node_modules/@types"],
     });
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      definitions || PRESET_DEFINITIONS,
+      definitions,
       'file:///node_modules/dbtpl/index.js'
     );
 
     const model = monaco.editor.createModel(
-      `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nconsole.log();`,
+      `"use strict"\nimport {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
       'javascript',
       monaco.Uri.parse(`file:///main-${Date.now()}.js`)
     );
@@ -261,8 +279,63 @@ ${PRESET_DEFINITIONS}
   }, [definitions]);
   const tplEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: typeof monacoEditor) => {
     console.log('tplEditorDidMount', editor, monaco);
-    // editor.setValue(`import {aa} from 'dbtpl';\nconsole.log();`);
+    setTplEditor(editor);
   }, []);
+
+  // endregion
+
+  // region 依赖内容和模板结果
+
+  const [tab, setTab] = useState(0);
+  const handleTabChange = useCallback((e, nv) => setTab(nv), []);
+
+  const [result, setResult] = useState('');
+
+  const depEditorWillMount = useCallback((/*monaco: typeof monacoEditor*/): EditorConstructionOptions => {
+    return {
+      value: definitions || PRESET_DEFINITIONS,
+      readOnly: true,
+      minimap: {
+        enabled: false,
+      },
+      language: 'javascript',
+    };
+  }, [definitions]);
+
+  const resultEditorWillMount = useCallback((/*monaco: typeof monacoEditor*/): EditorConstructionOptions => {
+    return {
+      value: `${result}`,
+      minimap: {
+        enabled: false,
+      },
+      language: 'javascript',
+    };
+  }, [result]);
+
+  const printResult = useCallback(() => {
+    if (tplEditor) {
+      try {
+        const source = tplEditor.getValue();
+        const sourceCode = `
+          ${definitions}
+          ${source}
+        `.replace(/(?<=\n) *((import.+?;)|export )/g, '');
+        console.log(sourceCode);
+        const r = new Function(sourceCode)();
+        if (r === undefined) {
+          setEM('没有找到return语句');
+        } else {
+          setResult(r);
+          plus();
+          setEM('');
+        }
+      } catch (e) {
+        setEM(stringifyError(e));
+      }
+    } else {
+      setEM('编辑器暂时未初始化完成');
+    }
+  }, [definitions, tplEditor, plus]);
 
   // endregion
 
@@ -309,14 +382,41 @@ ${PRESET_DEFINITIONS}
           </Paper>
         </Grid>
         <Grid item xs={12} lg={8} xl={9}>
-          <Paper>
-            <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
-            <div className="editor-wrapper">
-              <MonacoEditor key={editorReloadKey} height={500}
-                            editorWillMount={tplEditorWillMount}
-                            editorDidMount={tplEditorDidMount}/>
-            </div>
-          </Paper>
+          <Grid container spacing={2}>
+            <Grid item xs={12} lg={6}>
+              <Paper>
+                <div className="typo-with-right-button">
+                  <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
+                  <div>
+                    <Button variant={'contained'} color={'primary'} onClick={printResult}>输出结果</Button>
+                  </div>
+                </div>
+                <div className="editor-wrapper">
+                  <MonacoEditor key={editorReloadKey} height={500}
+                                editorWillMount={tplEditorWillMount}
+                                editorDidMount={tplEditorDidMount}/>
+                </div>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} lg={6}>
+              <Paper style={{paddingTop: '8px'}}>
+                <Tabs value={tab} onChange={handleTabChange}>
+                  <Tab label="注入的内容" />
+                  <Tab label="模板输出结果" />
+                </Tabs>
+                <div className="editor-wrapper">
+                  {tab === 0 ? <>
+                    <MonacoEditor key={editorReloadKey} height={500}
+                                  editorWillMount={depEditorWillMount}/>
+                  </> : <></>}
+                  {tab === 1 ? <>
+                    <MonacoEditor key={rk} height={500}
+                                  editorWillMount={resultEditorWillMount}/>
+                  </> : <></>}
+                </div>
+              </Paper>
+            </Grid>
+          </Grid>
         </Grid>
       </Grid>
     </div>

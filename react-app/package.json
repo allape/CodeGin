@@ -84,6 +84,9 @@
     "test": "node scripts/test.js"
   },
   "eslintConfig": {
+    "rules": {
+      "no-new-func": "off"
+    },
     "extends": [
       "react-app",
       "react-app/jest"
