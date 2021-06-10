@@ -21,9 +21,8 @@ import {useCounter, useLoading} from './component/loading/loading';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
-import MonacoEditor from 'react-monaco-editor';
-import * as monacoEditor from 'monaco-editor';
-import {EditorConstructionOptions} from 'react-monaco-editor/src/types';
+import * as me from 'monaco-editor';
+import CodeEditor from './component/code-editor/code-editor';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -67,7 +66,7 @@ export function toUnderlineCase(str, upper = false) {
 `;
 
 // 结果内容支持语法高亮的语言
-const LANGUAGES = Array.from(new Set(monacoEditor.languages.getLanguages().map(i => i.id.toLowerCase())));
+const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
 
 export default function App() {
 
@@ -251,37 +250,30 @@ ${PRESET_DEFINITIONS}
 
   // region 文本编辑器
 
-  const [tplEditor, setTplEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor | undefined>(undefined);
-  const tplEditorWillMount = useCallback((monaco: typeof monacoEditor): EditorConstructionOptions => {
+  const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
+  const tplEditorWillMount = useCallback((monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
+    console.log('tplEditorWillMount');
+
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+      outFile: 'file:///',
       target: monaco.languages.typescript.ScriptTarget.ES2016,
       moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       module: monaco.languages.typescript.ModuleKind.CommonJS,
-      noEmit: true,
     });
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
       definitions,
       'file:///node_modules/dbtpl/index.js'
     );
-    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
-
-    });
-
-    const model = monaco.editor.createModel(
-      `"use strict"\nimport {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
-      'javascript',
-      monaco.Uri.parse(`file:///main-${Date.now()}.js`)
-    );
 
     return {
-      model,
+      value: `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
       minimap: {
         enabled: false,
       },
       language: 'javascript',
     };
   }, [definitions]);
-  const tplEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: typeof monacoEditor) => {
+  const tplEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor, monaco: typeof me) => {
     console.log('tplEditorDidMount', editor, monaco);
     setTplEditor(oldEditor => {
       try {
@@ -300,13 +292,13 @@ ${PRESET_DEFINITIONS}
   const [tab, setTab] = useState(0);
   const handleTabChange = useCallback((e, nv) => setTab(nv), []);
 
-  const [, setDepEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor | undefined>(undefined);
+  const [, setDepEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
 
-  const [resultEditor, setResultEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor | undefined>(undefined);
+  const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');
   const [resultType, setResultType] = useState('javascript');
 
-  const depEditorWillMount = useCallback((/*monaco: typeof monacoEditor*/): EditorConstructionOptions => {
+  const depEditorWillMount = useCallback((/*monaco: typeof me*/): me.editor.IStandaloneEditorConstructionOptions => {
     return {
       value: definitions || PRESET_DEFINITIONS,
       readOnly: true,
@@ -316,7 +308,7 @@ ${PRESET_DEFINITIONS}
       language: 'javascript',
     };
   }, [definitions]);
-  const depEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+  const depEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor) => {
     setDepEditor(oldEditor => {
       try {
         oldEditor?.dispose();
@@ -332,7 +324,7 @@ ${PRESET_DEFINITIONS}
     setResult(resultEditor?.getValue() || '');
     plus();
   }, [plus, resultEditor]);
-  const resultEditorWillMount = useCallback((/*monaco: typeof monacoEditor*/): EditorConstructionOptions => {
+  const resultEditorWillMount = useCallback((/*monaco: typeof me*/): me.editor.IStandaloneEditorConstructionOptions => {
     return {
       value: `${result}`,
       minimap: {
@@ -341,7 +333,7 @@ ${PRESET_DEFINITIONS}
       language: resultType,
     };
   }, [result, resultType]);
-  const resultEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+  const resultEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor) => {
     setResultEditor(oldEditor => {
       try {
         oldEditor?.dispose();
@@ -432,9 +424,8 @@ ${PRESET_DEFINITIONS}
                   </div>
                 </div>
                 <div className="editor-wrapper">
-                  <MonacoEditor key={editorReloadKey} height={500}
-                                editorWillMount={tplEditorWillMount}
-                                editorDidMount={tplEditorDidMount}/>
+                  <CodeEditor willMount={tplEditorWillMount}
+                              didMount={tplEditorDidMount}/>
                 </div>
               </Paper>
             </Grid>
@@ -451,18 +442,18 @@ ${PRESET_DEFINITIONS}
                     </Select>
                   </div>
                 </div>
-                <div className="editor-wrapper">
-                  {tab === 0 ? <>
-                    <MonacoEditor key={editorReloadKey} height={500}
-                                  editorDidMount={depEditorDidMount}
-                                  editorWillMount={depEditorWillMount}/>
-                  </> : <></>}
-                  {tab === 1 ? <>
-                    <MonacoEditor key={rk} height={500}
-                                  editorWillMount={resultEditorWillMount}
-                                  editorDidMount={resultEditorDidMount}/>
-                  </> : <></>}
-                </div>
+                {/*<div className="editor-wrapper">*/}
+                {/*  {tab === 0 ? <>*/}
+                {/*    <MonacoEditor key={editorReloadKey} height={500}*/}
+                {/*                  editorDidMount={depEditorDidMount}*/}
+                {/*                  editorWillMount={depEditorWillMount}/>*/}
+                {/*  </> : <></>}*/}
+                {/*  {tab === 1 ? <>*/}
+                {/*    <MonacoEditor key={rk} height={500}*/}
+                {/*                  editorWillMount={resultEditorWillMount}*/}
+                {/*                  editorDidMount={resultEditorDidMount}/>*/}
+                {/*  </> : <></>}*/}
+                {/*</div>*/}
               </Paper>
             </Grid>
           </Grid>

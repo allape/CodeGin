@@ -11,6 +11,10 @@
       width: 100%;
     }
   }
+  .MuiSelect-root {
+    min-width: 100px;
+    padding-left: 10px;
+  }
   .form-wrapper {
     margin-top: 20px;
     position: relative;
@@ -34,5 +38,6 @@
   .typo-with-right-button {
     display: flex;
     justify-content: space-between;
+    align-items: center;
   }
 }
