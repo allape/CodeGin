@@ -27,6 +27,7 @@ import * as me from 'monaco-editor';
 import CodeEditor from './component/code-editor/CodeEditor';
 import {TemplateFile} from './model/template-file';
 import DateString from './component/date/DateString';
+import stringify from './component/date/date';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -279,8 +280,10 @@ ${PRESET_DEFINITIONS}
         definitions,
         'file:///node_modules/dbtpl/index.js'
       );
+      const content = tplEditor?.getValue() || DEFAULT_TPL;
+      console.log(content);
       const model = me.editor.createModel(
-        tplEditor?.getValue() || DEFAULT_TPL,
+        content,
         'javascript',
         me.Uri.parse(`file:///main-${Date.now()}.js`)
       );
@@ -323,7 +326,9 @@ ${PRESET_DEFINITIONS}
 
   const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');
-  const [resultType, setResultType] = useState('javascript');
+  const applyResult = useCallback((result: string) => {
+    setResult(result);
+  }, []);
 
   const depEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
     value: definitions,
@@ -334,10 +339,12 @@ ${PRESET_DEFINITIONS}
     language: 'javascript',
   }), [definitions]);
 
+  const [resultType, setResultType] = useState('javascript');
   const onResultTypeChange = useCallback(e => {
     setResultType(e.target.value);
     setResult(resultEditor?.getValue() || '');
   }, [resultEditor]);
+
   const resultEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
     minimap: {
       enabled: false,
@@ -361,8 +368,16 @@ ${PRESET_DEFINITIONS}
         if (r === undefined) {
           setEM('没有找到return语句');
         } else {
-          setResult(r);
+          applyResult(r);
           setEM('');
+
+          // 添加历史记录
+          setResults(olds => [{
+            id: table?.name || r.substring(0, 10) || stringify(new Date()),
+            content: r,
+            createTime: Date.now(),
+            updateTime: Date.now(),
+          }, ...olds]);
         }
       } catch (e) {
         setEM(stringifyError(e));
@@ -370,7 +385,15 @@ ${PRESET_DEFINITIONS}
     } else {
       setEM('编辑器暂时未初始化完成');
     }
-  }, [definitions, tplEditor]);
+  }, [definitions, tplEditor, table, applyResult]);
+
+  // 输出模板日志
+  const [results, setResults] = useState<TemplateFile[]>([]);
+  const emptyResults = useCallback(() => {
+    if (window.confirm('确定清空输出历史?')) {
+      setResults([]);
+    }
+  }, []);
 
   // endregion
 
@@ -441,13 +464,18 @@ ${PRESET_DEFINITIONS}
                                    onClick={getTemplateFiles}>刷新</LoadingButton>
                   </div>
                 </div>
-                <LoadingContainer style={{padding: '5px', margin: '10px 0'}} loading={loading}>
+                <LoadingContainer style={{padding: '5px 5px 0', margin: '5px 0 0'}} loading={loading}>
+                  {templateFiles.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
                   <List component="nav">
                     {templateFiles.map((file, index) =>
                       <ListItem key={index} button onClick={() => loadTemplateFile(file)}>
-                        <ListItemText primary={<span><DateString date={file.createTime} />: {file.id}</span>}
+                        <ListItemText primary={<span>
+                                        <DateString date={file.createTime} />
+                                        <span>&nbsp;&nbsp;&nbsp;&nbsp;{file.id}</span>
+                                      </span>}
                                       secondary={<DateString date={file.updateTime} />} />
-                      </ListItem>)}
+                      </ListItem>)
+                    }
                   </List>
                 </LoadingContainer>
               </Paper>
@@ -476,6 +504,28 @@ ${PRESET_DEFINITIONS}
                                 options={resultEditorOptions}
                                 didMount={resultEditorDidMount}/>
                   </> : <></>}
+                </div>
+              </Paper>
+              <Paper>
+                <div className="typo-with-right-button">
+                  <Typography variant="h6" color="textPrimary">结果输出历史</Typography>
+                  <div>
+                    <LoadingButton variant={'contained'}
+                                   onClick={emptyResults}>清空</LoadingButton>
+                  </div>
+                </div>
+                <div style={{padding: '5px 5px 0', margin: '5px 0 0'}}>
+                  {results.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
+                  <List component="nav">
+                    {results.map((file, index) =>
+                      <ListItem key={index} button onClick={() => applyResult(file.content)}>
+                        <ListItemText primary={<span>
+                                        <DateString date={file.createTime} />
+                                        <span>&nbsp;&nbsp;&nbsp;&nbsp;{file.id}</span>
+                                      </span>} />
+                      </ListItem>)
+                    }
+                  </List>
                 </div>
               </Paper>
             </Grid>
