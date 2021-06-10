@@ -70,6 +70,12 @@ export function toUnderlineCase(str, upper = false) {
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
 
+const TEMPLATE_EDITOR_MODEL = me.editor.createModel(
+  `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;return tpl;`,
+  'javascript',
+  me.Uri.parse(`file:///main-${Date.now()}.js`)
+);
+
 export default function App() {
 
   const [loading, load, loaded] = useLoading();
@@ -250,8 +256,11 @@ ${PRESET_DEFINITIONS}
   const tplEditorWillMount = useCallback((monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ES2016,
+      allowNonTsExtensions: true,
       moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       module: monaco.languages.typescript.ModuleKind.CommonJS,
+      noEmit: true,
+      typeRoots: ["node_modules/@types"],
     });
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
       definitions,
@@ -259,7 +268,7 @@ ${PRESET_DEFINITIONS}
     );
 
     return {
-      value: `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
+      model: TEMPLATE_EDITOR_MODEL,
       minimap: {
         enabled: false,
       },
@@ -403,14 +412,14 @@ ${PRESET_DEFINITIONS}
                   </div>
                 </div>
                 <div className="editor-wrapper">
-                  {/*{tab === 0 ? <>*/}
-                  {/*  <CodeEditor value={definitions} options={depEditorOptions}/>*/}
-                  {/*</> : <></>}*/}
-                  {/*{tab === 1 ? <>*/}
-                  {/*  <CodeEditor value={result}*/}
-                  {/*              options={resultEditorOptions}*/}
-                  {/*              didMount={resultEditorDidMount}/>*/}
-                  {/*</> : <></>}*/}
+                  {tab === 0 ? <>
+                    <CodeEditor value={definitions} options={depEditorOptions}/>
+                  </> : <></>}
+                  {tab === 1 ? <>
+                    <CodeEditor value={result}
+                                options={resultEditorOptions}
+                                didMount={resultEditorDidMount}/>
+                  </> : <></>}
                 </div>
               </Paper>
             </Grid>

@@ -1,10 +1,8 @@
-import {LoadingProps, useStyles} from './loading';
-import React, {HTMLAttributes, ReactElement} from 'react';
+import {LoadingProps, useNoLoadingProps, useStyles} from './loading';
+import React, {HTMLAttributes} from 'react';
 import {CircularProgress, makeStyles} from '@material-ui/core';
 
-export interface LoadingContainerProps extends HTMLAttributes<HTMLDivElement>, LoadingProps {
-  children: ReactElement[] | ReactElement;
-}
+export interface LoadingContainerProps extends HTMLAttributes<HTMLDivElement>, LoadingProps {}
 
 const useContainerStyle = makeStyles({
   loadingContainer: {
@@ -23,15 +21,17 @@ const useContainerStyle = makeStyles({
       height: '100%',
       opacity: 1,
       backgroundColor: 'rgba(0, 0, 0, .1)',
+      cursor: 'progress',
     },
   },
 });
 
 export default function LoadingContainer(props: LoadingContainerProps) {
   const {loading, children} = props;
+  const noLoadingProps = useNoLoadingProps(props);
   const classes = useStyles();
   const subClasses = useContainerStyle();
-  return <div {...props} className={`${classes.loadingContainer} ${subClasses.loadingContainer} ${loading ? 'loading' : ''}`}>
+  return <div {...noLoadingProps} className={`${classes.loadingContainer} ${subClasses.loadingContainer} ${loading ? 'loading' : ''}`}>
     {children}
     {loading && <CircularProgress size={24} className={classes.loadingProgress} />}
   </div>;

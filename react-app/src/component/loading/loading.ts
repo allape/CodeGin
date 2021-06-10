@@ -18,6 +18,14 @@ export interface LoadingProps {
   loading?: boolean;
 }
 
+export function useNoLoadingProps<T extends LoadingProps>(props: T): T {
+  return useMemo(() => {
+    const newProps = {...props};
+    delete newProps.loading;
+    return newProps;
+  }, [props]);
+}
+
 export type LoadFunction = (key?: string) => string;
 export type LoadedFunction = (key: string) => boolean;
 
