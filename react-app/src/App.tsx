@@ -70,12 +70,6 @@ export function toUnderlineCase(str, upper = false) {
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
 
-const TEMPLATE_EDITOR_MODEL = me.editor.createModel(
-  `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
-  'javascript',
-  me.Uri.parse(`file:///main-${Date.now()}.js`)
-);
-
 export default function App() {
 
   const [loading, load, loaded] = useLoading();
@@ -266,9 +260,13 @@ ${PRESET_DEFINITIONS}
       definitions,
       'file:///node_modules/dbtpl/index.js'
     );
-
+    const model = me.editor.createModel(
+      `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\n\nlet tpl = \`\`;\n\nreturn tpl;`,
+      'javascript',
+      me.Uri.parse(`file:///main-${Date.now()}.js`)
+    );
     return {
-      model: TEMPLATE_EDITOR_MODEL,
+      model,
       minimap: {
         enabled: false,
       },
@@ -276,7 +274,7 @@ ${PRESET_DEFINITIONS}
     };
   }, [definitions]);
   const tplEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor, monaco: typeof me) => {
-    console.log('tplEditorDidMount', editor, monaco);
+    console.log('template editor did mount:', editor, monaco);
     setTplEditor(editor);
   }, []);
 
