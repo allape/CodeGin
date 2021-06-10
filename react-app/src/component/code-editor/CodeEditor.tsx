@@ -35,8 +35,14 @@ export default function CodeEditor(props: CodeEditorProps) {
   useEffect(
     () => {
       if (ref.current) {
+        for (const child of Array.from(ref.current.children)) {
+          child.remove();
+        }
+        const newDiv = document.createElement('div');
+        newDiv.style.height = '100%';
+        ref.current.append(newDiv);
         const editor = me.editor.create(
-          ref.current,
+          newDiv,
           {
             ...options,
             ...(willMount ? willMount(me) : undefined),

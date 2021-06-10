@@ -24,7 +24,7 @@ import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import * as me from 'monaco-editor';
-import CodeEditor from './component/code-editor/code-editor';
+import CodeEditor from './component/code-editor/CodeEditor';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -71,7 +71,7 @@ export function toUnderlineCase(str, upper = false) {
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
 
 const TEMPLATE_EDITOR_MODEL = me.editor.createModel(
-  `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;return tpl;`,
+  `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
   'javascript',
   me.Uri.parse(`file:///main-${Date.now()}.js`)
 );
