@@ -6,8 +6,8 @@ import {
   Grid,
   List,
   ListItem,
-  ListItemText,
-  Paper,
+  ListItemText, MenuItem,
+  Paper, Select,
   Tab,
   Tabs,
   TextField,
@@ -65,6 +65,9 @@ export function toUnderlineCase(str, upper = false) {
   return str ? str.replace(/([A-Z])/g, '_$1')[upper ? 'toUpperCase' : 'toLowerCase']() : '';
 }
 `;
+
+// 结果内容支持语法高亮的语言
+const LANGUAGES = Array.from(new Set(monacoEditor.languages.getLanguages().map(i => i.id.toLowerCase())));
 
 export default function App() {
 
@@ -252,16 +255,17 @@ ${PRESET_DEFINITIONS}
   const tplEditorWillMount = useCallback((monaco: typeof monacoEditor): EditorConstructionOptions => {
     monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
       target: monaco.languages.typescript.ScriptTarget.ES2016,
-      allowNonTsExtensions: true,
       moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
       module: monaco.languages.typescript.ModuleKind.CommonJS,
       noEmit: true,
-      typeRoots: ["node_modules/@types"],
     });
     monaco.languages.typescript.javascriptDefaults.addExtraLib(
       definitions,
       'file:///node_modules/dbtpl/index.js'
     );
+    monaco.languages.typescript.javascriptDefaults.setDiagnosticsOptions({
+
+    });
 
     const model = monaco.editor.createModel(
       `"use strict"\nimport {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\nlet tpl = \`\`;\nreturn tpl;`,
@@ -279,7 +283,14 @@ ${PRESET_DEFINITIONS}
   }, [definitions]);
   const tplEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor, monaco: typeof monacoEditor) => {
     console.log('tplEditorDidMount', editor, monaco);
-    setTplEditor(editor);
+    setTplEditor(oldEditor => {
+      try {
+        oldEditor?.dispose();
+      } catch (e) {
+        console.error('error on dispose template editor:', e);
+      }
+      return editor;
+    });
   }, []);
 
   // endregion
@@ -289,7 +300,11 @@ ${PRESET_DEFINITIONS}
   const [tab, setTab] = useState(0);
   const handleTabChange = useCallback((e, nv) => setTab(nv), []);
 
+  const [, setDepEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor | undefined>(undefined);
+
+  const [resultEditor, setResultEditor] = useState<monacoEditor.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');
+  const [resultType, setResultType] = useState('javascript');
 
   const depEditorWillMount = useCallback((/*monaco: typeof monacoEditor*/): EditorConstructionOptions => {
     return {
@@ -301,16 +316,41 @@ ${PRESET_DEFINITIONS}
       language: 'javascript',
     };
   }, [definitions]);
+  const depEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+    setDepEditor(oldEditor => {
+      try {
+        oldEditor?.dispose();
+      } catch (e) {
+        console.error('error on dispose dependency editor:', e);
+      }
+      return editor;
+    });
+  }, []);
 
+  const onResultTypeChange = useCallback(e => {
+    setResultType(e.target.value);
+    setResult(resultEditor?.getValue() || '');
+    plus();
+  }, [plus, resultEditor]);
   const resultEditorWillMount = useCallback((/*monaco: typeof monacoEditor*/): EditorConstructionOptions => {
     return {
       value: `${result}`,
       minimap: {
         enabled: false,
       },
-      language: 'javascript',
+      language: resultType,
     };
-  }, [result]);
+  }, [result, resultType]);
+  const resultEditorDidMount = useCallback((editor: monacoEditor.editor.IStandaloneCodeEditor) => {
+    setResultEditor(oldEditor => {
+      try {
+        oldEditor?.dispose();
+      } catch (e) {
+        console.error('error on dispose result editor:', e);
+      }
+      return editor;
+    });
+  }, []);
 
   const printResult = useCallback(() => {
     if (tplEditor) {
@@ -400,18 +440,27 @@ ${PRESET_DEFINITIONS}
             </Grid>
             <Grid item xs={12} lg={6}>
               <Paper style={{paddingTop: '8px'}}>
-                <Tabs value={tab} onChange={handleTabChange}>
-                  <Tab label="注入的内容" />
-                  <Tab label="模板输出结果" />
-                </Tabs>
+                <div className="typo-with-right-button">
+                  <Tabs value={tab} onChange={handleTabChange}>
+                    <Tab label="注入的内容" />
+                    <Tab label="模板输出结果" />
+                  </Tabs>
+                  <div>
+                    <Select value={resultType} onChange={onResultTypeChange}>
+                      {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
+                    </Select>
+                  </div>
+                </div>
                 <div className="editor-wrapper">
                   {tab === 0 ? <>
                     <MonacoEditor key={editorReloadKey} height={500}
+                                  editorDidMount={depEditorDidMount}
                                   editorWillMount={depEditorWillMount}/>
                   </> : <></>}
                   {tab === 1 ? <>
                     <MonacoEditor key={rk} height={500}
-                                  editorWillMount={resultEditorWillMount}/>
+                                  editorWillMount={resultEditorWillMount}
+                                  editorDidMount={resultEditorDidMount}/>
                   </> : <></>}
                 </div>
               </Paper>
