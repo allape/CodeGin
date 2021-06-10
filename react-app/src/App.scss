@@ -39,5 +39,10 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    .buttons {
+      button {
+        margin: 0 5px;
+      }
+    }
   }
 }

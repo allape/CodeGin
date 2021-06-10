@@ -1,6 +1,7 @@
 import {Connection} from '../model/connection';
 import Database, {Field, Table} from '../model/database';
 import {Electron} from './electron';
+import {TemplateFile} from '../model/template-file';
 
 declare const electron: Electron;
 
@@ -95,4 +96,28 @@ export async function getFields(tableName: string): Promise<Field[]> {
       },
     ]), 1000));
   }
+}
+
+/**
+ * 获取报错了的模板文件
+ */
+export async function getSavedTplFiles(): Promise<TemplateFile[]> {
+  if (production) {
+    return electron.getSavedTplFiles();
+  }
+  if (Math.random() * 100 < 30) return Promise.reject('获取文件失败');
+  return new Promise(resolve => setTimeout(() => resolve([
+    {
+      id: '电了么后台管理系统',
+      content: `电了么后台管理系统`,
+      createTime: Date.now(),
+      updateTime: Date.now(),
+    },
+    {
+      id: '电了么后台管理系统-带城市',
+      content: `电了么后台管理系统-带城市`,
+      createTime: Date.now(),
+      updateTime: Date.now(),
+    },
+  ]), 1000));
 }

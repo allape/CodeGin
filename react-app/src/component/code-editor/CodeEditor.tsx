@@ -27,8 +27,8 @@ export default function CodeEditor(props: CodeEditorProps) {
   const [editor, setEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
 
   useEffect(() => {
-    if (editor && value) {
-      editor.setValue(value.toString());
+    if (editor) {
+      editor.setValue((value || '').toString());
     }
   }, [editor, value]);
 

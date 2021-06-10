@@ -1,4 +1,4 @@
-import React, {FormEvent, useCallback, useMemo, useState} from 'react';
+import React, {FormEvent, useCallback, useEffect, useMemo, useState} from 'react';
 import './App.scss';
 import {
   Button,
@@ -12,12 +12,12 @@ import {
   Select,
   Tab,
   Tabs,
-  TextField,
+  TextField, Tooltip,
   Typography
 } from "@material-ui/core";
 import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
-import {connect, getFields, getTables, stringifyError} from './api/api';
+import {connect, getFields, getSavedTplFiles, getTables, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
 import {useLoading} from './component/loading/loading';
 import LoadingContainer from './component/loading/LoadingContainer';
@@ -25,6 +25,8 @@ import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import * as me from 'monaco-editor';
 import CodeEditor from './component/code-editor/CodeEditor';
+import {TemplateFile} from './model/template-file';
+import DateString from './component/date/DateString';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -66,6 +68,14 @@ export function toUnderlineCase(str, upper = false) {
   return str ? str.replace(/([A-Z])/g, '_$1')[upper ? 'toUpperCase' : 'toLowerCase']() : '';
 }
 `;
+
+// 默认的内容
+const DEFAULT_TPL =
+`import {database, table, fields, fieldMap, toCamelCase, toUnderlineCase} from 'dbtpl';
+
+let tpl = \`\`;
+
+return tpl;`;
 
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
@@ -170,6 +180,9 @@ export const table = ${JSON.stringify(table, undefined, 4)};
 // 字段列表
 export const fields = ${JSON.stringify(fields, undefined, 4)};
 
+// 字段列表Map
+export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name as string]:c}), {}), undefined, 4)};
+
 // 预设的方法
 ${PRESET_DEFINITIONS}
 `);
@@ -247,36 +260,59 @@ ${PRESET_DEFINITIONS}
   // region 文本编辑器
 
   const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
-  const tplEditorWillMount = useCallback((monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
-    monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
-      target: monaco.languages.typescript.ScriptTarget.ES2016,
-      allowNonTsExtensions: true,
-      moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
-      module: monaco.languages.typescript.ModuleKind.CommonJS,
-      noEmit: true,
-      typeRoots: ["node_modules/@types"],
-    });
-    monaco.languages.typescript.javascriptDefaults.addExtraLib(
-      definitions,
-      'file:///node_modules/dbtpl/index.js'
+  const resetTplEditor = useCallback(() => {
+    if (window.confirm(`确定重置模板内容至默认模板?`)) {
+      tplEditor?.setValue(DEFAULT_TPL);
+    }
+  }, [tplEditor]);
+  const tplEditorWillMount = useCallback(
+    (monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
+      monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
+        target: monaco.languages.typescript.ScriptTarget.ES2016,
+        allowNonTsExtensions: true,
+        moduleResolution: monaco.languages.typescript.ModuleResolutionKind.NodeJs,
+        module: monaco.languages.typescript.ModuleKind.CommonJS,
+        noEmit: true,
+        typeRoots: ["node_modules/@types"],
+      });
+      monaco.languages.typescript.javascriptDefaults.addExtraLib(
+        definitions,
+        'file:///node_modules/dbtpl/index.js'
+      );
+      const model = me.editor.createModel(
+        tplEditor?.getValue() || DEFAULT_TPL,
+        'javascript',
+        me.Uri.parse(`file:///main-${Date.now()}.js`)
+      );
+      return {
+        model,
+        minimap: {
+          enabled: false,
+        },
+        language: 'javascript',
+      };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [definitions],
     );
-    const model = me.editor.createModel(
-      `import {database, table, fields, toCamelCase, toUnderlineCase} from 'dbtpl';\n\nlet tpl = \`\`;\n\nreturn tpl;`,
-      'javascript',
-      me.Uri.parse(`file:///main-${Date.now()}.js`)
-    );
-    return {
-      model,
-      minimap: {
-        enabled: false,
-      },
-      language: 'javascript',
-    };
-  }, [definitions]);
   const tplEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor, monaco: typeof me) => {
     console.log('template editor did mount:', editor, monaco);
     setTplEditor(editor);
   }, []);
+
+  // 保存了的模板文件
+  const [templateFiles, setTFs] = useState<TemplateFile[]>([]);
+  const getTemplateFiles = useCallback(() => {
+    promiseHandler(getSavedTplFiles()).then(files => setTFs(files));
+  }, [promiseHandler]);
+  useEffect(() => {
+    getTemplateFiles();
+  }, [getTemplateFiles]);
+  const loadTemplateFile = useCallback((file: TemplateFile) => {
+    if (window.confirm(`点击确定将加载"${file.id}", 并且当前编辑的内容将会丢失`)) {
+      tplEditor?.setValue(file.content);
+    }
+  }, [tplEditor]);
 
   // endregion
 
@@ -386,7 +422,8 @@ ${PRESET_DEFINITIONS}
               <Paper>
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
-                  <div>
+                  <div className="buttons">
+                    <Button variant={'contained'} onClick={resetTplEditor}>重置</Button>
                     <Button variant={'contained'} color={'primary'} onClick={printResult}>输出结果</Button>
                   </div>
                 </div>
@@ -395,18 +432,39 @@ ${PRESET_DEFINITIONS}
                               didMount={tplEditorDidMount}/>
                 </div>
               </Paper>
+              <Paper>
+                <div className="typo-with-right-button">
+                  <Typography variant="h6" color="textPrimary">保存了的模板</Typography>
+                  <div>
+                    <LoadingButton loading={loading}
+                                   variant={'contained'}
+                                   onClick={getTemplateFiles}>刷新</LoadingButton>
+                  </div>
+                </div>
+                <LoadingContainer style={{padding: '5px', margin: '10px 0'}} loading={loading}>
+                  <List component="nav">
+                    {templateFiles.map((file, index) =>
+                      <ListItem key={index} button onClick={() => loadTemplateFile(file)}>
+                        <ListItemText primary={<span><DateString date={file.createTime} />: {file.id}</span>}
+                                      secondary={<DateString date={file.updateTime} />} />
+                      </ListItem>)}
+                  </List>
+                </LoadingContainer>
+              </Paper>
             </Grid>
             <Grid item xs={12} lg={6}>
               <Paper style={{paddingTop: '8px'}}>
                 <div className="typo-with-right-button">
                   <Tabs value={tab} onChange={handleTabChange}>
-                    <Tab label="注入的内容" />
-                    <Tab label="模板输出结果" />
+                    <Tab label="依赖" />
+                    <Tab label="结果" />
                   </Tabs>
                   <div>
-                    <Select value={resultType} onChange={onResultTypeChange}>
-                      {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
-                    </Select>
+                    <Tooltip title="结果语言格式">
+                      <Select value={resultType} onChange={onResultTypeChange}>
+                        {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
+                      </Select>
+                    </Tooltip>
                   </div>
                 </div>
                 <div className="editor-wrapper">
