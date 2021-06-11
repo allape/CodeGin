@@ -60,6 +60,37 @@ export async function getTables(schemaName: string): Promise<Table[]> {
 }
 
 /**
+ * 获取表DDL
+ * @param tableName 表名
+ */
+export async function getTableDDL(tableName: string): Promise<string> {
+  if (production) {
+    return electron.getTableDDL(tableName);
+  }
+  return `
+CREATE TABLE \`controller_log\` (
+  \`id\` varchar(64) NOT NULL,
+  \`url\` text COMMENT '请求的URL',
+  \`http_method\` varchar(64) DEFAULT NULL COMMENT '请求方式',
+  \`ip\` text COMMENT '请求的IP',
+  \`auth\` text COMMENT 'Authorization头',
+  \`lang\` text COMMENT 'Accept-Language头',
+  \`time\` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '请求时间',
+  \`thread\` text COMMENT '当前线程信息',
+  \`class_method\` text COMMENT '处理的类方法',
+  \`args\` longtext COMMENT '类方法参数',
+  \`return\` longtext COMMENT '方法响应内容',
+  \`exception\` longtext COMMENT '类方法抛出的异常',
+  \`finish\` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '处理完成时间',
+  \`large\` blob COMMENT '大数据内容',
+  \`create_time\` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  \`status\` decimal(1,0) NOT NULL DEFAULT '1',
+  PRIMARY KEY (\`id\`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='访问记录'
+`;
+}
+
+/**
  * 获取表字段
  * @param tableName 表名
  */

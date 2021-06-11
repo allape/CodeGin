@@ -18,7 +18,7 @@ import {
 } from "@material-ui/core";
 import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
-import {connect, getFields, getTables, saveTplFile, stringifyError} from './api/api';
+import {connect, getFields, getTableDDL, getTables, saveTplFile, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
@@ -119,6 +119,8 @@ export default function App() {
   const [tables, setTables] = useState<Table[] | undefined>(undefined);
   // 当前选中的table
   const [table, setTable] = useState<Table | undefined>(undefined);
+  // 当前选中的table的DDL信息
+  const [ddl, setDdl] = useState('');
   // fields列表
   const [fields, setFields] = useState<Field[] | undefined>(undefined);
 
@@ -158,7 +160,13 @@ export default function App() {
 
   const onTableClick = useCallback((table: Table) => {
     setTable(table);
-    promiseHandler(getFields(table.name!)).then(fields => setFields(fields));
+    Promise.all([
+      promiseHandler(getTableDDL(table.name!)),
+      promiseHandler(getFields(table.name!)),
+    ]).then(([ ddl, fields ]) => {
+      setDdl(ddl);
+      setFields(fields);
+    });
   }, [promiseHandler]);
 
   // 将当前显示字段的表的数据导入编辑器依赖
@@ -169,6 +177,12 @@ export default function App() {
     }
 
     setDefinitions(`
+// DDL
+${
+  /*ddl.split('\n').map(i => `// ${i}`).join('\n')*/
+  '// ' + ddl.replace(/\n/g, '\n// ')
+}
+
 // 数据库数据
 export const database = ${JSON.stringify(database, undefined, 4)};
 
@@ -185,7 +199,7 @@ export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name
 ${PRESET_DEFINITIONS}
 `);
   }, [
-    database, table, fields,
+    database, table, fields, ddl,
     setEM,
   ]);
 

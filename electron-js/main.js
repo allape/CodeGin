@@ -97,9 +97,10 @@ app.whenReady().then(() => {
     ipcMain.on(GetTablesChannel, (e, args) => {
         try {
             execute(conn, `SHOW TABLES FROM \`${args}\``).then(res => {
-                console.log(res);
-                // TODO
-                e.reply(GetTablesChannel, []);
+                const colName = `Tables_in_${args}`;
+                e.reply(GetTablesChannel, res.results.map(i => ({
+                    name: i[colName],
+                })));
             }).catch(err => e.reply(GetTablesChannel, err));
         } catch (err) {
             e.reply(GetTablesChannel, err);

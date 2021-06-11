@@ -9,16 +9,16 @@ export interface Schema {
   // 库名称
   name?: string;
   // 表列表
-  tables?: Table[];
+  // tables?: Table[];
 }
 
 export interface Table {
   // 表名称
   name?: string;
   // 字段列表
-  fields?: Field[];
+  // fields?: Field[];
   // DDL
-  ddl?: string;
+  // ddl?: string;
 }
 
 export interface Field {
