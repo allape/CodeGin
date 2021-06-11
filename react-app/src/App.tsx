@@ -1,4 +1,4 @@
-import React, {FormEvent, useCallback, useEffect, useMemo, useState} from 'react';
+import React, {FormEvent, useCallback, useMemo, useState} from 'react';
 import './App.scss';
 import {
   Button,
@@ -12,14 +12,14 @@ import {
   Select,
   Tab,
   Tabs,
-  TextField, Tooltip,
+  TextField,
+  Tooltip,
   Typography
 } from "@material-ui/core";
 import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
-import {connect, getFields, getSavedTplFiles, getTables, stringifyError} from './api/api';
+import {connect, getFields, getTables, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
-import {useLoading} from './component/loading/loading';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
@@ -28,6 +28,8 @@ import CodeEditor from './component/code-editor/CodeEditor';
 import {TemplateFile} from './model/template-file';
 import DateString from './component/date/DateString';
 import stringify from './component/date/date';
+import usePromiseHandler from './component/loading/promise-handler';
+import TemplateFiles from './view/TemplateFiles';
 
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = {
@@ -83,7 +85,7 @@ const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.t
 
 export default function App() {
 
-  const [loading, load, loaded] = useLoading();
+  const [promiseHandler, loading, , , errorMessage, setEM] = usePromiseHandler(stringifyError);
 
   // 注入到编辑器的依赖内容
   const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS);
@@ -92,8 +94,6 @@ export default function App() {
 
   // 连接信息表单错误信息
   const [errors, setErrors] = useState<Record<string, boolean>>({});
-  // 需要而外提示的错误信息
-  const [errorMessage, setEM] = useState('');
 
   // 连接信息
   const [, setConn] = useState<Connection>({});
@@ -107,24 +107,6 @@ export default function App() {
   const [table, setTable] = useState<Table | undefined>(undefined);
   // fields列表
   const [fields, setFields] = useState<Field[] | undefined>(undefined);
-
-  const promiseHandler = useCallback<(<T> (promise: Promise<T>) => Promise<T>)>((promise: Promise<any>) => {
-    const rk = load();
-    return new Promise((resolve, reject) => {
-      promise
-        .then(db => {
-          setEM('');
-          resolve(db);
-        })
-        .catch(e => {
-          setEM(stringifyError(e));
-          reject(e);
-        })
-        .finally(() => {
-          loaded(rk);
-        });
-    });
-  }, [load, loaded]);
 
   const onConnectionInfoSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();
@@ -303,14 +285,6 @@ ${PRESET_DEFINITIONS}
     setTplEditor(editor);
   }, []);
 
-  // 保存了的模板文件
-  const [templateFiles, setTFs] = useState<TemplateFile[]>([]);
-  const getTemplateFiles = useCallback(() => {
-    promiseHandler(getSavedTplFiles()).then(files => setTFs(files));
-  }, [promiseHandler]);
-  useEffect(() => {
-    getTemplateFiles();
-  }, [getTemplateFiles]);
   const loadTemplateFile = useCallback((file: TemplateFile) => {
     if (window.confirm(`点击确定将加载"${file.id}", 并且当前编辑的内容将会丢失`)) {
       tplEditor?.setValue(file.content);
@@ -385,7 +359,7 @@ ${PRESET_DEFINITIONS}
     } else {
       setEM('编辑器暂时未初始化完成');
     }
-  }, [definitions, tplEditor, table, applyResult]);
+  }, [definitions, tplEditor, table, applyResult, setEM]);
 
   // 输出模板日志
   const [results, setResults] = useState<TemplateFile[]>([]);
@@ -441,7 +415,10 @@ ${PRESET_DEFINITIONS}
         </Grid>
         <Grid item xs={12} lg={8} xl={9}>
           <Grid container spacing={2}>
-            <Grid item xs={12} lg={6}>
+            <Grid item xs={12} lg={12}>
+              <Paper style={{maxHeight: 500}}>
+                <TemplateFiles onItemClick={loadTemplateFile} promiseHandler={promiseHandler} loading={loading}/>
+              </Paper>
               <Paper>
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
@@ -455,32 +432,8 @@ ${PRESET_DEFINITIONS}
                               didMount={tplEditorDidMount}/>
                 </div>
               </Paper>
-              <Paper>
-                <div className="typo-with-right-button">
-                  <Typography variant="h6" color="textPrimary">保存了的模板</Typography>
-                  <div>
-                    <LoadingButton loading={loading}
-                                   variant={'contained'}
-                                   onClick={getTemplateFiles}>刷新</LoadingButton>
-                  </div>
-                </div>
-                <LoadingContainer style={{padding: '5px 5px 0', margin: '5px 0 0'}} loading={loading}>
-                  {templateFiles.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
-                  <List component="nav">
-                    {templateFiles.map((file, index) =>
-                      <ListItem key={index} button onClick={() => loadTemplateFile(file)}>
-                        <ListItemText primary={<span>
-                                        <DateString date={file.createTime} />
-                                        <span>&nbsp;&nbsp;&nbsp;&nbsp;{file.id}</span>
-                                      </span>}
-                                      secondary={<DateString date={file.updateTime} />} />
-                      </ListItem>)
-                    }
-                  </List>
-                </LoadingContainer>
-              </Paper>
             </Grid>
-            <Grid item xs={12} lg={6}>
+            <Grid item xs={12} lg={12}>
               <Paper style={{paddingTop: '8px'}}>
                 <div className="typo-with-right-button">
                   <Tabs value={tab} onChange={handleTabChange}>

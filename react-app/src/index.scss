@@ -7,3 +7,14 @@ body {
   -moz-osx-font-smoothing: grayscale;
   background-color: #f5f5f5;
 }
+
+.typo-with-right-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  .buttons {
+    button {
+      margin: 0 5px;
+    }
+  }
+}
