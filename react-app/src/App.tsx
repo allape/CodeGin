@@ -321,14 +321,16 @@ ${PRESET_DEFINITIONS}
 
   const [tplFilesReloadKey, reloadTplFiles] = useCounter();
 
+  // 当前打开/编辑的文件名
+  const [tplFileName, setTplFileName] = useState('');
+
   const loadTemplateFile = useCallback((file: TemplateFile) => {
     if (window.confirm(`点击确定将加载"${file.id}", 并且当前编辑的内容将会丢失`)) {
       tplEditor?.setValue(file.content);
+      setTplFileName(file.id);
     }
   }, [tplEditor]);
 
-  // 当前打开/编辑的文件名
-  const [tplFileName, setTplFileName] = useState('');
   const [tplFileNameMessage, setTFNM] = useState('');
   // 模板文件名称输入弹窗
   const [tplFileSaveDialogOpen, setTFSDO] = useState(false);
@@ -406,7 +408,7 @@ ${PRESET_DEFINITIONS}
         const source = tplEditor.getValue();
         const sourceCode = `
           ${definitions.replace(/(?<=\n) *((import.+?;)|export )/g, '')}
-          ${source}
+          ${/*替换掉第一个import*/source.replace(/(?<=\n) *(import.+?;)/, '')}
         `;
         console.log(sourceCode);
         const r = new Function(sourceCode)();
