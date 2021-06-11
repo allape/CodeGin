@@ -429,10 +429,7 @@ ${PRESET_DEFINITIONS}
         </Grid>
         <Grid item xs={12} lg={8} xl={9}>
           <Grid container spacing={2}>
-            <Grid item xs={12} lg={12}>
-              <Paper style={{maxHeight: 500}}>
-                <TemplateFiles onItemClick={loadTemplateFile} promiseHandler={promiseHandler} loading={loading}/>
-              </Paper>
+            <Grid item xs={12} lg={8}>
               <Paper>
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
@@ -447,7 +444,12 @@ ${PRESET_DEFINITIONS}
                 </div>
               </Paper>
             </Grid>
-            <Grid item xs={12} lg={12}>
+            <Grid item xs={12} lg={4}>
+              <Paper style={{maxHeight: 500}}>
+                <TemplateFiles onItemClick={loadTemplateFile} promiseHandler={promiseHandler} loading={loading}/>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} lg={8}>
               <Paper style={{paddingTop: '8px'}}>
                 <div className="typo-with-right-button">
                   <Tabs value={tab} onChange={handleTabChange}>
@@ -473,6 +475,8 @@ ${PRESET_DEFINITIONS}
                   </> : <></>}
                 </div>
               </Paper>
+            </Grid>
+            <Grid item xs={12} lg={4}>
               <Paper>
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">结果输出历史</Typography>
