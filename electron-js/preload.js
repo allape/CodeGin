@@ -33,6 +33,12 @@ const electron = {
     getTables: async (schemaName) => {
         return ipcRendererAsyncWrap('get-tables', schemaName);
     },
+    getTableDDL: async (schemaName, tableName) => {
+        return ipcRendererAsyncWrap('get-table-ddl', `\`${schemaName}\`.\`${tableName}\``);
+    },
+    getFields: async (schemaName, tableName) => {
+        return ipcRendererAsyncWrap('get-fields', `\`${schemaName}\`.\`${tableName}\``);
+    },
     getSavedTplFiles: async () => {
         return ipcRendererWrap('get-saved-tpl-files');
     },

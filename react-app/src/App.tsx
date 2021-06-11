@@ -104,6 +104,9 @@ export default function App() {
   // 注入到编辑器的依赖内容
   const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS);
 
+  const [tab, setTab] = useState(0);
+  const handleTabChange = useCallback((e, nv) => setTab(nv), []);
+
   // region 数据库
 
   // 连接信息表单错误信息
@@ -161,13 +164,13 @@ export default function App() {
   const onTableClick = useCallback((table: Table) => {
     setTable(table);
     Promise.all([
-      promiseHandler(getTableDDL(table.name!)),
-      promiseHandler(getFields(table.name!)),
+      promiseHandler(getTableDDL(schema?.name!, table.name!)),
+      promiseHandler(getFields(schema?.name!, table.name!)),
     ]).then(([ ddl, fields ]) => {
       setDdl(ddl);
       setFields(fields);
     });
-  }, [promiseHandler]);
+  }, [schema, promiseHandler]);
 
   // 将当前显示字段的表的数据导入编辑器依赖
   const setEditorDefinitions = useCallback(() => {
@@ -198,6 +201,7 @@ export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name
 // 预设的方法
 ${PRESET_DEFINITIONS}
 `);
+    setTab(0);
   }, [
     database, table, fields, ddl,
     setEM,
@@ -364,9 +368,6 @@ ${PRESET_DEFINITIONS}
   // endregion
 
   // region 依赖内容和模板结果
-
-  const [tab, setTab] = useState(0);
-  const handleTabChange = useCallback((e, nv) => setTab(nv), []);
 
   const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');

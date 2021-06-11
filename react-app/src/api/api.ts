@@ -61,11 +61,12 @@ export async function getTables(schemaName: string): Promise<Table[]> {
 
 /**
  * 获取表DDL
+ * @param schemaName 数据库名称
  * @param tableName 表名
  */
-export async function getTableDDL(tableName: string): Promise<string> {
+export async function getTableDDL(schemaName: string, tableName: string): Promise<string> {
   if (production) {
-    return electron.getTableDDL(tableName);
+    return electron.getTableDDL(schemaName, tableName);
   }
   return `
 CREATE TABLE \`controller_log\` (
@@ -92,11 +93,12 @@ CREATE TABLE \`controller_log\` (
 
 /**
  * 获取表字段
+ * @param schemaName 数据库名称
  * @param tableName 表名
  */
-export async function getFields(tableName: string): Promise<Field[]> {
+export async function getFields(schemaName: string, tableName: string): Promise<Field[]> {
   if (production) {
-    return electron.getFields(tableName);
+    return electron.getFields(schemaName, tableName);
   } else {
     if (Math.random() * 100 < 30) return Promise.reject('当前还未建立数据库连接');
     return new Promise(resolve => setTimeout(() => resolve([

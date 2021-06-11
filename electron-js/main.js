@@ -106,6 +106,34 @@ app.whenReady().then(() => {
             e.reply(GetTablesChannel, err);
         }
     });
+
+    const GetTableDDLChannel = 'get-table-ddl';
+    ipcMain.on(GetTableDDLChannel, (e, args) => {
+        try {
+            execute(conn, `SHOW CREATE TABLE ${args}`).then(res => {
+                e.reply(GetTableDDLChannel, res.results[0]['Create Table']);
+            }).catch(err => e.reply(GetTableDDLChannel, err));
+        } catch (err) {
+            e.reply(GetTableDDLChannel, err);
+        }
+    });
+
+    const GetFieldsChannel = 'get-fields';
+    ipcMain.on(GetFieldsChannel, (e, args) => {
+        try {
+            execute(conn, `SHOW FULL COLUMNS FROM ${args}`).then(res => {
+                e.reply(GetFieldsChannel, res.results.map(i => ({
+                    name: i.Field,
+                    type: i.Type,
+                    nullable: i['Null'] === 'YES',
+                    defaultValue: i['Default'],
+                    comment: i['Comment'],
+                })));
+            }).catch(err => e.reply(GetFieldsChannel, err));
+        } catch (err) {
+            e.reply(GetFieldsChannel, err);
+        }
+    });
 });
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit()
