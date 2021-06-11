@@ -18,3 +18,24 @@ body {
     }
   }
 }
+
+.dialog-form-wrapper {
+  .dialog-form {
+    padding: 20px;
+    min-width: 300px;
+    .buttons {
+      padding: 20px 0 0;
+      display: flex;
+      justify-content: space-evenly;
+      align-items: center;
+    }
+  }
+}
+
+.MuiSelect-root {
+  min-width: 100px;
+  padding-left: 10px;
+}
+.MuiFormControl-root {
+  width: 100%;
+}

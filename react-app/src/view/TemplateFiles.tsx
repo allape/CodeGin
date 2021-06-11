@@ -8,6 +8,8 @@ import {PromiseHandlerFunction} from '../component/loading/promise-handler';
 import {getSavedTplFiles} from '../api/api';
 
 interface TemplateFilesProps {
+  // 重新加载key
+  reloadKey?: number;
   // 点击元素时
   onItemClick: (file: TemplateFile) => void;
 
@@ -17,7 +19,7 @@ interface TemplateFilesProps {
 }
 
 export default function TemplateFiles(props: TemplateFilesProps) {
-  const { onItemClick, promiseHandler, loading } = props;
+  const { reloadKey, onItemClick, promiseHandler, loading } = props;
 
   const [templateFiles, setTemplateFiles] = useState<TemplateFile[]>([]);
 
@@ -33,7 +35,7 @@ export default function TemplateFiles(props: TemplateFilesProps) {
 
   useEffect(() => {
     getTemplateFiles();
-  }, [getTemplateFiles]);
+  }, [getTemplateFiles, reloadKey]);
 
   return <>
     <div className="typo-with-right-button">

@@ -1,7 +1,7 @@
 import React, {FormEvent, useCallback, useMemo, useState} from 'react';
 import './App.scss';
 import {
-  Button,
+  Button, Dialog,
   Divider,
   Grid,
   List,
@@ -18,7 +18,7 @@ import {
 } from "@material-ui/core";
 import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
-import {connect, getFields, getTables, stringifyError} from './api/api';
+import {connect, getFields, getTables, saveTplFile, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
@@ -30,6 +30,7 @@ import DateString from './component/date/DateString';
 import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
 import TemplateFiles from './view/TemplateFiles';
+import {useCounter} from './component/loading/loading';
 
 // 保存连接信息的key
 const CONNECTION_STORAGE_KEY = 'connection_storage_key';
@@ -260,6 +261,7 @@ ${PRESET_DEFINITIONS}
   const resetTplEditor = useCallback(() => {
     if (window.confirm(`确定重置模板内容至默认模板?`)) {
       tplEditor?.setValue(DEFAULT_TPL);
+      setTplFileName('');
     }
   }, [tplEditor]);
   const tplEditorWillMount = useCallback(
@@ -299,11 +301,51 @@ ${PRESET_DEFINITIONS}
     setTplEditor(editor);
   }, []);
 
+  const [tplFilesReloadKey, reloadTplFiles] = useCounter();
+
   const loadTemplateFile = useCallback((file: TemplateFile) => {
     if (window.confirm(`点击确定将加载"${file.id}", 并且当前编辑的内容将会丢失`)) {
       tplEditor?.setValue(file.content);
     }
   }, [tplEditor]);
+
+  // 当前打开/编辑的文件名
+  const [tplFileName, setTplFileName] = useState('');
+  const [tplFileNameMessage, setTFNM] = useState('');
+  // 模板文件名称输入弹窗
+  const [tplFileSaveDialogOpen, setTFSDO] = useState(false);
+  const openTplFileDialog = useCallback(() => {
+    setTFSDO(true);
+  }, []);
+  const hideTplFileDialog = useCallback(() => {
+    setTFSDO(false);
+  }, []);
+
+  // 保存文件
+  const doSaveTplFile = useCallback((filename: string, content: string) => {
+    promiseHandler(saveTplFile(filename, content)).then(() => {
+      hideTplFileDialog();
+      reloadTplFiles();
+    });
+  }, [hideTplFileDialog, reloadTplFiles, promiseHandler]);
+  // 文件名提交
+  const onTplFileDialogSubmit = useCallback((e) => {
+    e.preventDefault();
+    let filename: string = e.target.tplFileName?.value || '';
+    if (!filename) {
+      setTFNM('请输入文件名称!');
+      return;
+    }
+    if (!filename.endsWith('.js')) {
+      filename += '.js';
+    }
+    setTplFileName(filename);
+    doSaveTplFile(filename, tplEditor?.getValue() || '');
+  }, [doSaveTplFile, tplEditor]);
+  // 保存
+  const onTplFileSave = useCallback(() => {
+    openTplFileDialog();
+  }, [openTplFileDialog]);
 
   // endregion
 
@@ -358,6 +400,7 @@ ${PRESET_DEFINITIONS}
         } else {
           applyResult(r);
           setEM('');
+          setTab(1);
 
           // 添加历史记录
           setResults(olds => [{
@@ -434,19 +477,25 @@ ${PRESET_DEFINITIONS}
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
                   <div className="buttons">
-                    <Button variant={'contained'} onClick={resetTplEditor}>重置</Button>
+                    <LoadingButton variant={'contained'} color={'primary'}
+                                   loading={loading}
+                                   onClick={openTplFileDialog}>保存{tplFileName ? `至${tplFileName.substring(0, 3)}...` : ''}</LoadingButton>
+                    <Button variant={'outlined'} onClick={resetTplEditor}>重置</Button>
                     <Button variant={'contained'} color={'primary'} onClick={printResult}>输出结果</Button>
                   </div>
                 </div>
                 <div className="editor-wrapper">
-                  <CodeEditor willMount={tplEditorWillMount}
+                  <CodeEditor onChange={onTplFileSave}
+                              willMount={tplEditorWillMount}
                               didMount={tplEditorDidMount}/>
                 </div>
               </Paper>
             </Grid>
             <Grid item xs={12} lg={4}>
               <Paper style={{maxHeight: 500}}>
-                <TemplateFiles onItemClick={loadTemplateFile} promiseHandler={promiseHandler} loading={loading}/>
+                <TemplateFiles reloadKey={tplFilesReloadKey}
+                               onItemClick={loadTemplateFile}
+                               promiseHandler={promiseHandler} loading={loading}/>
               </Paper>
             </Grid>
             <Grid item xs={12} lg={8}>
@@ -477,7 +526,7 @@ ${PRESET_DEFINITIONS}
               </Paper>
             </Grid>
             <Grid item xs={12} lg={4}>
-              <Paper>
+              <Paper style={{maxHeight: 500}}>
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">结果输出历史</Typography>
                   <div>
@@ -503,6 +552,18 @@ ${PRESET_DEFINITIONS}
           </Grid>
         </Grid>
       </Grid>
+      <Dialog className="dialog-form-wrapper" open={tplFileSaveDialogOpen} onClose={hideTplFileDialog}>
+        <form className="dialog-form" onSubmit={onTplFileDialogSubmit}>
+          <TextField name="tplFileName" label="文件名称" defaultValue={tplFileName}
+                     required autoComplete="off"
+                     error={!!tplFileNameMessage} helperText={tplFileNameMessage} />
+          <div className="buttons">
+            <Button variant={'contained'} disabled={loading} onClick={hideTplFileDialog}>取消</Button>
+            <LoadingButton variant={'contained'} color={'primary'}
+                           loading={loading} type={'submit'}>保存</LoadingButton>
+          </div>
+        </form>
+      </Dialog>
     </div>
   );
 }

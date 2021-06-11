@@ -99,13 +99,12 @@ export async function getFields(tableName: string): Promise<Field[]> {
 }
 
 /**
- * 获取报错了的模板文件
+ * 获取保存了的模板文件
  */
 export async function getSavedTplFiles(): Promise<TemplateFile[]> {
   if (production) {
     return electron.getSavedTplFiles();
   }
-  if (Math.random() * 100 < 30) return Promise.reject('获取文件失败');
   return new Promise(resolve => setTimeout(() => resolve([
     {
       id: '电了么后台管理系统',
@@ -120,4 +119,16 @@ export async function getSavedTplFiles(): Promise<TemplateFile[]> {
       updateTime: Date.now(),
     },
   ]), 1000));
+}
+
+/**
+ * 保存模板文件
+ */
+export async function saveTplFile(name: string, content: string): Promise<boolean> {
+  if (production) {
+    return electron.saveTplFile(name, content);
+  }
+  console.log('dev: should save', content, 'to', name);
+  if (Math.random() * 100 < 30) return Promise.reject('获取文件失败');
+  return new Promise(resolve => setTimeout(() => resolve(true), 1000));
 }

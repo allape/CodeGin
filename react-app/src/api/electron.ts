@@ -7,4 +7,5 @@ export interface Electron {
   getTables(schema: string): Promise<Table[]>;
   getFields(table: string): Promise<Field[]>;
   getSavedTplFiles(): Promise<TemplateFile[]>;
+  saveTplFile(name: string, content: string): Promise<boolean>;
 }
