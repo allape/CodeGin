@@ -31,13 +31,26 @@ import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
 import TemplateFiles from './view/TemplateFiles';
 
+// 保存连接信息的key
+const CONNECTION_STORAGE_KEY = 'connection_storage_key';
 // 默认回填的数据
-const DEFAULT_VALUE: Connection = {
-  host: 'localhost',
-  port: 3306,
-  username: 'root',
-  password: undefined,
-};
+const DEFAULT_VALUE: Connection = (() => {
+  try {
+    const fromCache = window.localStorage.getItem(CONNECTION_STORAGE_KEY);
+    if (fromCache) {
+      const result = JSON.parse(fromCache);
+      if (result) return result;
+    }
+  } catch (e) {
+    console.error('error occurred while parsing stored connection info:', e);
+  }
+  return {
+    host: 'localhost',
+    port: 3306,
+    username: 'root',
+    password: undefined,
+  };
+})();
 
 // 预设的依赖内容
 const PRESET_DEFINITIONS = `
@@ -129,6 +142,7 @@ export default function App() {
     }
 
     setConn(data);
+    window.localStorage.setItem(CONNECTION_STORAGE_KEY, JSON.stringify(data));
 
     setDatabase(undefined);
     promiseHandler(connect(data)).then(db => {
