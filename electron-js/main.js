@@ -63,7 +63,17 @@ app.whenReady().then(() => {
                     createTime: fileStat.birthtimeMs,
                     updateTime: fileStat.mtimeMs,
                 };
-            });
+            }).sort((c, p) => p.updateTime - c.updateTime);
+        } catch (err) {
+            e.returnValue = err;
+        }
+    });
+
+    const SaveTplFileChannel = 'save-tpl-file';
+    ipcMain.on(SaveTplFileChannel, (e, { name, content }) => {
+        try {
+            fs.writeFileSync(path.join(SAVED_TEMPLATE_FILES_FOLDER, name), content);
+            e.returnValue = true;
         } catch (err) {
             e.returnValue = err;
         }

@@ -405,9 +405,9 @@ ${PRESET_DEFINITIONS}
       try {
         const source = tplEditor.getValue();
         const sourceCode = `
-          ${definitions}
+          ${definitions.replace(/(?<=\n) *((import.+?;)|export )/g, '')}
           ${source}
-        `.replace(/(?<=\n) *((import.+?;)|export )/g, '');
+        `;
         console.log(sourceCode);
         const r = new Function(sourceCode)();
         if (r === undefined) {

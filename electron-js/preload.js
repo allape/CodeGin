@@ -42,4 +42,7 @@ const electron = {
     getSavedTplFiles: async () => {
         return ipcRendererWrap('get-saved-tpl-files');
     },
+    saveTplFile: async (name, content) => {
+        return ipcRendererWrap('save-tpl-file', { name, content });
+    },
 };
