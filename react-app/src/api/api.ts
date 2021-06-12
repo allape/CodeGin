@@ -5,7 +5,7 @@ import {TemplateFile} from '../model/template-file';
 
 declare const electron: Electron;
 
-const production = process.env.NODE_ENV === 'production';
+const production = process.env.REACT_APP_STAGE === 'production';
 
 export function stringifyError(e: any): string {
   return typeof e === 'string' ? e : (e.message || e.msg);

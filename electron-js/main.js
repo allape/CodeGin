@@ -20,7 +20,11 @@ function createWindow () {
         },
     });
 
-    win.loadFile('./app/index.html').then();
+    if (process.env.NODE_ENV === 'production') {
+        win.loadFile('./app/index.html').then();
+    } else {
+        win.loadURL("http://localhost:3001").then();
+    }
 }
 
 async function execute(conn, sql, params) {

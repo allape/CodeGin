@@ -408,7 +408,7 @@ ${PRESET_DEFINITIONS}
         const source = tplEditor.getValue();
         const sourceCode = `
           ${definitions.replace(/(?<=\n) *((import.+?;)|export )/g, '')}
-          ${/*替换掉第一个import*/source.replace(/(?<=\n) *(import.+?;)/, '')}
+          ${/*替换掉第一个import*/source.replace(/\s*(import.+?;)/, '')}
         `;
         console.log(sourceCode);
         const r = new Function(sourceCode)();

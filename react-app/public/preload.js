@@ -1,3 +1,7 @@
+if (!window.require) {
+    throw new Error('no in electron app');
+}
+
 const { ipcRenderer } = require('electron');
 
 async function ipcRendererWrap(channel, args) {
