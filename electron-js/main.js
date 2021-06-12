@@ -4,7 +4,7 @@ const path = require('path');
 const mysql = require('mysql');
 
 // 模板文件文件夹
-const SAVED_TEMPLATE_FILES_FOLDER = './tpl';
+const SAVED_TEMPLATE_FILES_FOLDER = path.join(app.getAppPath(), 'tpl');
 
 function createWindow () {
     const win = new BrowserWindow({
