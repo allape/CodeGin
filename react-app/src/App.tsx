@@ -33,6 +33,7 @@ import usePromiseHandler from './component/loading/promise-handler';
 import TemplateFiles from './view/TemplateFiles';
 import {useCounter} from './component/loading/loading';
 import {DEFINITION_IMPORT, PRESET_DEFINITIONS} from './model/definition';
+import useStorableState from './component/storable-state/storable-state';
 
 // 保存连接信息的key
 const CONNECTION_STORAGE_KEY = 'connection_storage_key';
@@ -58,10 +59,6 @@ const DEFAULT_VALUE: Connection = (() => {
 // 保存了的结果语言类型
 const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
 const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
-const RESULT_LANGUAGE_TYPE_FROM_STORAGE = (() => {
-  return window.localStorage.getItem(RESULT_LANGUAGE_TYPE_STORAGE_KEY)
-    || DEFAULT_RESULT_LANGUAGE_TYPE;
-})();
 
 // 默认的内容
 const DEFAULT_TPL =
@@ -382,7 +379,10 @@ ${PRESET_DEFINITIONS}
     language: 'javascript',
   }), [definitions]);
 
-  const [resultType, setResultType] = useState(RESULT_LANGUAGE_TYPE_FROM_STORAGE);
+  const [resultType, setResultType] = useStorableState<string>(
+    RESULT_LANGUAGE_TYPE_STORAGE_KEY,
+    s => s || DEFAULT_RESULT_LANGUAGE_TYPE
+  );
   const onResultTypeChange = useCallback(e => {
     const type = e.target.value;
     setResultType(type);
