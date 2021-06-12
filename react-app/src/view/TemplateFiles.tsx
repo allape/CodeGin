@@ -1,6 +1,5 @@
 import {TemplateFile} from '../model/template-file';
 import {List, ListItem, ListItemText, Typography} from '@material-ui/core';
-import LoadingButton from '../component/loading/LoadingButton';
 import LoadingContainer from '../component/loading/LoadingContainer';
 import DateString from '../component/date/DateString';
 import React, {useCallback, useEffect, useState} from 'react';
@@ -38,14 +37,6 @@ export default function TemplateFiles(props: TemplateFilesProps) {
   }, [getTemplateFiles, reloadKey]);
 
   return <>
-    <div className="typo-with-right-button">
-      <Typography variant="h6" color="textPrimary">保存了的模板</Typography>
-      <div>
-        <LoadingButton loading={loading}
-                       variant={'contained'}
-                       onClick={getTemplateFiles}>刷新</LoadingButton>
-      </div>
-    </div>
     <LoadingContainer style={{padding: '5px 5px 0', margin: '5px 0 0'}} loading={loading}>
       {templateFiles.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
       <List component="nav">

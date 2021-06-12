@@ -57,7 +57,7 @@ const DEFAULT_VALUE: Connection = (() => {
 
 // 默认的内容
 const DEFAULT_TPL =
-`import {database, table, fields, fieldMap, ${DEFINITION_IMPORT} from 'dbtpl';
+`import {database, table, fields, fieldMap, ${DEFINITION_IMPORT}} from 'dbtpl';
 
 let tpl = \`\`;
 
@@ -199,7 +199,9 @@ ${PRESET_DEFINITIONS}
                     </ListItem>
                     {fields.map((field, index) =>
                       <ListItem key={index} button>
-                        <ListItemText style={{paddingLeft: '20px'}} primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`} />
+                        <ListItemText style={{paddingLeft: '20px'}}
+                                      primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`}
+                                      secondary={field.comment} />
                       </ListItem>)}
                   </List>
                   :
@@ -246,6 +248,11 @@ ${PRESET_DEFINITIONS}
 
   // region 文本编辑器
 
+  // 模板文件列表刷新器
+  const [tplFilesReloadKey, reloadTplFiles] = useCounter();
+  // 当前打开/编辑的文件名
+  const [tplFileName, setTplFileName] = useState('');
+
   const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const resetTplEditor = useCallback(() => {
     if (window.confirm(`确定重置模板内容至默认模板?`)) {
@@ -290,17 +297,23 @@ ${PRESET_DEFINITIONS}
     setTplEditor(editor);
   }, []);
 
-  const [tplFilesReloadKey, reloadTplFiles] = useCounter();
+  // region 模板文件列表
 
-  // 当前打开/编辑的文件名
-  const [tplFileName, setTplFileName] = useState('');
+  const [tplFilesDialogOpen, setTFDO] = useState(false);
+  const openTFD = useCallback(() => setTFDO(true), []);
+  const hideTFD = useCallback(() => setTFDO(false), []);
 
   const loadTemplateFile = useCallback((file: TemplateFile) => {
     if (window.confirm(`点击确定将加载"${file.id}", 并且当前编辑的内容将会丢失`)) {
       tplEditor?.setValue(file.content);
       setTplFileName(file.id);
+      hideTFD();
     }
-  }, [tplEditor]);
+  }, [tplEditor, hideTFD]);
+
+  // endregion
+
+  // region 保存模板文件
 
   const [tplFileNameMessage, setTFNM] = useState('');
   // 模板文件名称输入弹窗
@@ -337,6 +350,8 @@ ${PRESET_DEFINITIONS}
   const onTplFileSave = useCallback(() => {
     openTplFileDialog();
   }, [openTplFileDialog]);
+
+  // endregion
 
   // endregion
 
@@ -460,11 +475,12 @@ ${PRESET_DEFINITIONS}
         </Grid>
         <Grid item xs={12} lg={8} xl={9}>
           <Grid container spacing={2}>
-            <Grid item xs={12} lg={8}>
+            <Grid item xs={12} lg={12}>
               <Paper>
                 <div className="typo-with-right-button">
                   <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
                   <div className="buttons">
+                    <Button variant={'outlined'} onClick={openTFD}>模板文件列表</Button>
                     <LoadingButton variant={'contained'} color={'primary'}
                                    loading={loading}
                                    onClick={openTplFileDialog}>保存{tplFileName ? `至${tplFileName.substring(0, 3)}...` : ''}</LoadingButton>
@@ -477,13 +493,6 @@ ${PRESET_DEFINITIONS}
                               willMount={tplEditorWillMount}
                               didMount={tplEditorDidMount}/>
                 </div>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <Paper style={{maxHeight: 500}}>
-                <TemplateFiles reloadKey={tplFilesReloadKey}
-                               onItemClick={loadTemplateFile}
-                               promiseHandler={promiseHandler} loading={loading}/>
               </Paper>
             </Grid>
             <Grid item xs={12} lg={8}>
@@ -540,6 +549,24 @@ ${PRESET_DEFINITIONS}
           </Grid>
         </Grid>
       </Grid>
+      <Dialog open={tplFilesDialogOpen} onClose={hideTFD}>
+        <Paper className="dialog-content-wrapper" style={{maxHeight: 500, minWidth: 300}}>
+          <div className="typo-with-right-button">
+            <Typography variant="h6" color="textPrimary">保存了的模板</Typography>
+            <div className="buttons">
+              <LoadingButton loading={loading}
+                             variant={'contained'} color={'secondary'}
+                             onClick={hideTFD}>关闭</LoadingButton>
+              <LoadingButton loading={loading}
+                             variant={'contained'}
+                             onClick={reloadTplFiles}>刷新</LoadingButton>
+            </div>
+          </div>
+          <TemplateFiles reloadKey={tplFilesReloadKey}
+                         onItemClick={loadTemplateFile}
+                         promiseHandler={promiseHandler} loading={loading}/>
+        </Paper>
+      </Dialog>
       <Dialog className="dialog-form-wrapper" open={tplFileSaveDialogOpen} onClose={hideTplFileDialog}>
         <form className="dialog-form" onSubmit={onTplFileDialogSubmit}>
           <TextField name="tplFileName" label="文件名称" defaultValue={tplFileName}
