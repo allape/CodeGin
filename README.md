@@ -21,5 +21,7 @@ npm start
 #### 打包软件
 ```shell
 cd electron-js
-npm build
+npm run-script pack-macos
+# https://github.com/electron/electron-packager
+# electron-packager . CodeGin --platform=darwin --arch=x64 --out=build --overwrite
 ```
