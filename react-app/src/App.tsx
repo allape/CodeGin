@@ -1,7 +1,8 @@
 import React, {FormEvent, useCallback, useMemo, useState} from 'react';
 import './App.scss';
 import {
-  Button, Dialog,
+  Button,
+  Dialog,
   Divider,
   Grid,
   List,
@@ -31,6 +32,7 @@ import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
 import TemplateFiles from './view/TemplateFiles';
 import {useCounter} from './component/loading/loading';
+import {DEFINITION_IMPORT, PRESET_DEFINITIONS} from './model/definition';
 
 // 保存连接信息的key
 const CONNECTION_STORAGE_KEY = 'connection_storage_key';
@@ -53,42 +55,9 @@ const DEFAULT_VALUE: Connection = (() => {
   };
 })();
 
-// 预设的依赖内容
-const PRESET_DEFINITIONS = `
-/**
- * 将下划线字符串转为驼峰
- * @param {string} str 要被转换的字符串
- * @param {boolean} firstUpper 首字母是否大写
- */
-export function toCamelCase(str, firstUpper = false) {
-  if (!str) return '';
-  const pieces = str.split(/_/g);
-  let firstDidUpper = false;
-  return pieces.map((value => {
-    if (value) {
-      if (!firstDidUpper) {
-        firstDidUpper = true;
-        if (!firstUpper) return value;
-      }
-      return value[0].toUpperCase() + value.substring(1);
-    }
-    return undefined;
-  })).filter(i => !!i).reduce((p, c) => p + c, '');
-}
-
-/**
- * 将驼峰字符串转为下划线
- * @param {string} str 要被转换的字符串
- * @param {boolean} upper 是否转换为大写
- */
-export function toUnderlineCase(str, upper = false) {
-  return str ? str.replace(/([A-Z])/g, '_$1')[upper ? 'toUpperCase' : 'toLowerCase']() : '';
-}
-`;
-
 // 默认的内容
 const DEFAULT_TPL =
-`import {database, table, fields, fieldMap, toCamelCase, toUnderlineCase} from 'dbtpl';
+`import {database, table, fields, fieldMap, ${DEFINITION_IMPORT} from 'dbtpl';
 
 let tpl = \`\`;
 
