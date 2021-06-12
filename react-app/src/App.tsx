@@ -55,6 +55,14 @@ const DEFAULT_VALUE: Connection = (() => {
   };
 })();
 
+// 保存了的结果语言类型
+const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
+const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
+const RESULT_LANGUAGE_TYPE_FROM_STORAGE = (() => {
+  return window.localStorage.getItem(RESULT_LANGUAGE_TYPE_STORAGE_KEY)
+    || DEFAULT_RESULT_LANGUAGE_TYPE;
+})();
+
 // 默认的内容
 const DEFAULT_TPL =
 `import {database, table, fields, fieldMap, ${DEFINITION_IMPORT}} from 'dbtpl';
@@ -357,11 +365,13 @@ ${PRESET_DEFINITIONS}
 
   // region 依赖内容和模板结果
 
+  const [resultReloadKey, reloadResultEditor] = useCounter();
   const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');
   const applyResult = useCallback((result: string) => {
     setResult(result);
-  }, []);
+    reloadResultEditor();
+  }, [reloadResultEditor]);
 
   const depEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
     value: definitions,
@@ -372,19 +382,26 @@ ${PRESET_DEFINITIONS}
     language: 'javascript',
   }), [definitions]);
 
-  const [resultType, setResultType] = useState('javascript');
+  const [resultType, setResultType] = useState(RESULT_LANGUAGE_TYPE_FROM_STORAGE);
   const onResultTypeChange = useCallback(e => {
-    setResultType(e.target.value);
-    setResult(resultEditor?.getValue() || '');
-  }, [resultEditor]);
+    const type = e.target.value;
+    setResultType(type);
+    window.localStorage.setItem(RESULT_LANGUAGE_TYPE_STORAGE_KEY, type);
+    applyResult(resultEditor?.getValue() || '');
+  }, [resultEditor, applyResult]);
 
-  const resultEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
-    minimap: {
-      enabled: false,
-    },
-    language: resultType,
-  }), [resultType]);
+  const resultEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => {
+    console.log('reload result editor:', resultReloadKey);
+    return {
+      value: result,
+      minimap: {
+        enabled: false,
+      },
+      language: resultType,
+    };
+  }, [resultType, result, resultReloadKey]);
   const resultEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor) => {
+    console.log('result editor mounted');
     setResultEditor(editor);
   }, []);
 
@@ -421,13 +438,20 @@ ${PRESET_DEFINITIONS}
     }
   }, [definitions, tplEditor, table, applyResult, setEM]);
 
-  // 输出模板日志
+  // region  输出模板日志
+
+  const [resultsDialogOpen, setRDO] = useState(false);
+  const openRsD = useCallback(() => setRDO(true), []);
+  const hideRsD = useCallback(() => setRDO(false), []);
+
   const [results, setResults] = useState<TemplateFile[]>([]);
   const emptyResults = useCallback(() => {
     if (window.confirm('确定清空输出历史?')) {
       setResults([]);
     }
   }, []);
+
+  // endregion
 
   // endregion
 
@@ -495,14 +519,15 @@ ${PRESET_DEFINITIONS}
                 </div>
               </Paper>
             </Grid>
-            <Grid item xs={12} lg={8}>
+            <Grid item xs={12} lg={12}>
               <Paper style={{paddingTop: '8px'}}>
                 <div className="typo-with-right-button">
                   <Tabs value={tab} onChange={handleTabChange}>
                     <Tab label="依赖" />
                     <Tab label="结果" />
                   </Tabs>
-                  <div>
+                  <div className="buttons">
+                    <Button variant={'outlined'} onClick={openRsD}>历史记录</Button>
                     <Tooltip title="结果语言格式">
                       <Select value={resultType} onChange={onResultTypeChange}>
                         {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
@@ -515,34 +540,9 @@ ${PRESET_DEFINITIONS}
                     <CodeEditor value={definitions} options={depEditorOptions}/>
                   </> : <></>}
                   {tab === 1 ? <>
-                    <CodeEditor value={result}
-                                options={resultEditorOptions}
+                    <CodeEditor options={resultEditorOptions}
                                 didMount={resultEditorDidMount}/>
                   </> : <></>}
-                </div>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} lg={4}>
-              <Paper style={{maxHeight: 500}}>
-                <div className="typo-with-right-button">
-                  <Typography variant="h6" color="textPrimary">结果输出历史</Typography>
-                  <div>
-                    <LoadingButton variant={'contained'}
-                                   onClick={emptyResults}>清空</LoadingButton>
-                  </div>
-                </div>
-                <div style={{padding: '5px 5px 0', margin: '5px 0 0'}}>
-                  {results.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
-                  <List component="nav">
-                    {results.map((file, index) =>
-                      <ListItem key={index} button onClick={() => applyResult(file.content)}>
-                        <ListItemText primary={<span>
-                                        <DateString date={file.createTime} />
-                                        <span>&nbsp;&nbsp;&nbsp;&nbsp;{file.id}</span>
-                                      </span>} />
-                      </ListItem>)
-                    }
-                  </List>
                 </div>
               </Paper>
             </Grid>
@@ -554,9 +554,8 @@ ${PRESET_DEFINITIONS}
           <div className="typo-with-right-button">
             <Typography variant="h6" color="textPrimary">保存了的模板</Typography>
             <div className="buttons">
-              <LoadingButton loading={loading}
-                             variant={'contained'} color={'secondary'}
-                             onClick={hideTFD}>关闭</LoadingButton>
+              <Button variant={'contained'} color={'secondary'}
+                             onClick={hideTFD}>关闭</Button>
               <LoadingButton loading={loading}
                              variant={'contained'}
                              onClick={reloadTplFiles}>刷新</LoadingButton>
@@ -565,6 +564,32 @@ ${PRESET_DEFINITIONS}
           <TemplateFiles reloadKey={tplFilesReloadKey}
                          onItemClick={loadTemplateFile}
                          promiseHandler={promiseHandler} loading={loading}/>
+        </Paper>
+      </Dialog>
+      <Dialog open={resultsDialogOpen} onClose={hideRsD}>
+        <Paper className="dialog-content-wrapper" style={{maxHeight: 500, minWidth: 300}}>
+          <div className="typo-with-right-button">
+            <Typography variant="h6" color="textPrimary">结果输出历史</Typography>
+            <div className="buttons">
+              <Button variant={'contained'} color={'secondary'}
+                      onClick={hideRsD}>关闭</Button>
+              <LoadingButton variant={'contained'}
+                             onClick={emptyResults}>清空</LoadingButton>
+            </div>
+          </div>
+          <div style={{padding: '5px 5px 0', margin: '5px 0 0'}}>
+            {results.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
+            <List component="nav">
+              {results.map((file, index) =>
+                <ListItem key={index} button onClick={() => applyResult(file.content)}>
+                  <ListItemText primary={<span>
+                                        <DateString date={file.createTime} />
+                                        <span>&nbsp;&nbsp;&nbsp;&nbsp;{file.id}</span>
+                                      </span>} />
+                </ListItem>)
+              }
+            </List>
+          </div>
         </Paper>
       </Dialog>
       <Dialog className="dialog-form-wrapper" open={tplFileSaveDialogOpen} onClose={hideTplFileDialog}>
