@@ -164,8 +164,8 @@ export default function App() {
   const onTableClick = useCallback((table: Table) => {
     setTable(table);
     Promise.all([
-      promiseHandler(getTableDDL(schema?.name!, table.name!)),
-      promiseHandler(getFields(schema?.name!, table.name!)),
+      promiseHandler(getTableDDL(schema?.name!, table.name)),
+      promiseHandler(getFields(schema?.name!, table.name)),
     ]).then(([ ddl, fields ]) => {
       setDdl(ddl);
       setFields(fields);
@@ -245,7 +245,9 @@ ${PRESET_DEFINITIONS}
                     </ListItem>
                     {tables.map((table, index) =>
                       <ListItem key={index} button onClick={() => onTableClick(table)}>
-                        <ListItemText style={{paddingLeft: '20px'}} primary={`${schema?.name}.${table.name}`} />
+                        <ListItemText style={{paddingLeft: '20px'}}
+                                      primary={`${schema?.name}.${table.name}`}
+                                      secondary={table.comment} />
                       </ListItem>)}
                   </List>
                 }

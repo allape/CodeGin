@@ -110,10 +110,21 @@ app.whenReady().then(() => {
     const GetTablesChannel = 'get-tables';
     ipcMain.on(GetTablesChannel, (e, args) => {
         try {
-            execute(conn, `SHOW TABLES FROM \`${args}\``).then(res => {
+            // execute(conn, `SHOW TABLES FROM \`${args}\``).then(res => {
+            //     const colName = `Tables_in_${args}`;
+            //     e.reply(GetTablesChannel, res.results.map(i => ({
+            //         name: i[colName],
+            //     })));
+            // }).catch(err => e.reply(GetTablesChannel, err));
+            execute(
+                conn,
+                `SELECT table_name,table_comment FROM INFORMATION_SCHEMA.TABLES WHERE table_schema=?`,
+                [args],
+            ).then(res => {
                 const colName = `Tables_in_${args}`;
                 e.reply(GetTablesChannel, res.results.map(i => ({
-                    name: i[colName],
+                    name: i['TABLE_NAME'],
+                    comment: i['TABLE_COMMENT'],
                 })));
             }).catch(err => e.reply(GetTablesChannel, err));
         } catch (err) {

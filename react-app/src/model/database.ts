@@ -14,7 +14,9 @@ export interface Schema {
 
 export interface Table {
   // 表名称
-  name?: string;
+  name: string;
+  // 表注释
+  comment?: string;
   // 字段列表
   // fields?: Field[];
   // DDL
