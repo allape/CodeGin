@@ -4,7 +4,8 @@
   "description": "代码生成器",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "pack-macos": "electron-packager . CodeGin --platform=darwin --arch=x64 --out=build --overwrite"
   },
   "keywords": [
     "code-generator"
@@ -12,7 +13,8 @@
   "author": "ALLAPE",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^13.1.2"
+    "electron": "^13.1.2",
+    "electron-packager": "^15.2.0"
   },
   "dependencies": {
     "mysql": "^2.18.1"

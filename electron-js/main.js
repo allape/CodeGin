@@ -20,11 +20,8 @@ function createWindow () {
         },
     });
 
-    if (process.env.NODE_ENV === 'production') {
-        win.loadFile('./app/index.html').then();
-    } else {
-        win.loadURL("http://localhost:3001").then();
-    }
+    win.loadFile('./app/index.html').then();
+    // win.loadURL("http://localhost:3001").then();
 }
 
 async function execute(conn, sql, params) {
@@ -121,7 +118,6 @@ app.whenReady().then(() => {
                 `SELECT table_name,table_comment FROM INFORMATION_SCHEMA.TABLES WHERE table_schema=?`,
                 [args],
             ).then(res => {
-                const colName = `Tables_in_${args}`;
                 e.reply(GetTablesChannel, res.results.map(i => ({
                     name: i['TABLE_NAME'],
                     comment: i['TABLE_COMMENT'],

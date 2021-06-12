@@ -82,7 +82,7 @@
   "scripts": {
     "start": "REACT_APP_STAGE=devlopment PORT=3001 node scripts/start.js",
     "start-production": "REACT_APP_STAGE=production PORT=3001 node scripts/start.js",
-    "build": "PUBLIC_URL=\"./\" node scripts/build.js",
+    "build": "REACT_APP_STAGE=production PUBLIC_URL=\"./\" node scripts/build.js",
     "postbuild": "node move-to-electron-js.js",
     "test": "node scripts/test.js"
   },
