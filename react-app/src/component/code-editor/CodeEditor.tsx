@@ -44,6 +44,10 @@ export default function CodeEditor(props: CodeEditorProps) {
         const editor = me.editor.create(
           newDiv,
           {
+            automaticLayout: true,
+            scrollbar:{
+              alwaysConsumeMouseWheel: false,
+            },
             ...options,
             ...(willMount ? willMount(me) : undefined),
           },

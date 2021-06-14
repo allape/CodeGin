@@ -388,7 +388,7 @@ ${PRESET_DEFINITIONS}
     setResultType(type);
     window.localStorage.setItem(RESULT_LANGUAGE_TYPE_STORAGE_KEY, type);
     applyResult(resultEditor?.getValue() || '');
-  }, [resultEditor, applyResult]);
+  }, [resultEditor, applyResult, setResultType]);
 
   const resultEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => {
     console.log('reload result editor:', resultReloadKey);
