@@ -20,8 +20,11 @@ function createWindow () {
         },
     });
 
-    win.loadFile('./app/index.html').then();
-    // win.loadURL("http://localhost:3001").then();
+    if (process.env.ELEC_APP_TYPE === 'web') {
+        win.loadURL("http://localhost:3001").then();
+    } else {
+        win.loadFile('./app/index.html').then();
+    }
 }
 
 async function execute(conn, sql, params) {

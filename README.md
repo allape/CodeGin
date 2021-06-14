@@ -1,27 +1,42 @@
 # 代码生成器 React + ElectronJs
 
-#### 调试界面
-```shell
-cd react-app
-npm start
-```
+### 技术栈 | Technologies
+- [react](https://reactjs.org/)
+- [typescript](http://typescriptlang.org/)
+- [monaco-editor](https://github.com/microsoft/monaco-editor)
+- [electron-js](https://www.electronjs.org/)
+- [mysql](https://www.mysql.com/) | [npm-mysql](https://www.npmjs.com/package/mysql)
 
-#### 打包界面
+#### react
 ```shell
 cd react-app
+
+# 开发启动 | Start
+npm start
+
+# 生产启动, 需要在electron环境下 | Start for electron usage
+npm run-script start-production
+
+# 打包 | Build
 npm build
 ```
 
-#### 启动软件
+#### electron js
 ```shell
 cd electron-js
+# 正常启动 | Start
 npm start
-```
+# 调试页面启动 | Start for web debug
+npm run-script start-web
 
-#### 打包软件
-```shell
-cd electron-js
+# MacOS 打包 | Build for MacOS
 npm run-script pack-macos
+# 其他平台打包参考文档 | Build for another platforms
 # https://github.com/electron/electron-packager
-# electron-packager . CodeGin --platform=darwin --arch=x64 --out=build --overwrite
+# 显示打包帮助内容 | Display electron-packager manual
+./node_modules/.bin/electron-packager --help
+# 或 | or
+#e lectron-packager --help # npm install -g electron-packager
+# 或 | or
+# node ./node_modules/.bin/electron-packager --help
 ```

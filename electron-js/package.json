@@ -5,6 +5,7 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "start-web": "ELEC_APP_TYPE=web electron .",
     "pack-macos": "electron-packager . CodeGin --platform=darwin --arch=x64 --out=build --overwrite"
   },
   "keywords": [
