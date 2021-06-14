@@ -93,7 +93,7 @@ app.whenReady().then(() => {
             });
             execute(conn, `SHOW DATABASES`).then(res => {
                 e.reply(GetConnectionInfoChannel, {
-                    name: '',
+                    name: `${args.username}@${args.host}:${args.port}`,
                     schemas: res.results.map(i => ({
                         name: i.Database,
                     })),

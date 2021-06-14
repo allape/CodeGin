@@ -26,13 +26,13 @@ import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import * as me from 'monaco-editor';
 import CodeEditor from './component/code-editor/CodeEditor';
-import {TemplateFile} from './model/template-file';
+import {DEFAULT_TEMPLATE, TemplateFile} from './model/template-file';
 import DateString from './component/date/DateString';
 import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
 import TemplateFiles from './view/TemplateFiles';
 import {useCounter} from './component/loading/loading';
-import {DEFINITION_IMPORT, PRESET_DEFINITIONS} from './model/definition';
+import {PRESET_DEFINITIONS} from './model/definition';
 import useStorableState from './component/storable-state/storable-state';
 
 // 保存连接信息的key
@@ -59,63 +59,6 @@ const DEFAULT_VALUE: Connection = (() => {
 // 保存了的结果语言类型
 const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
 const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
-
-// 默认的内容
-const DEFAULT_TPL =
-`// 不要删除该import或添加其他的import语句, 执行模板的时候会替换掉第一句import, 这个仅仅是为了使用monaco editor的语法提示
-import {database, table, fields, fieldMap, ${DEFINITION_IMPORT}} from 'dbtpl';
-
-// 驼峰的表名
-const tableName = toCamelCase(table.name);
-const TableName = toCamelCase(table.name, true);
-
-// 忽略的字段
-const ignoreFields = ['id', 'status', 'create_time', 'update_time'];
-
-// 对字段进行简要的处理
-fields.forEach(field => {
-  field.newName = toCamelCase(field.name);
-  field.newType = toJavaType(field.type);
-});
-// 过滤后的字段数组
-const filteredFields = fields.filter(i => !ignoreFields.includes(i.name));
-
-// 字符串模板内容
-let tpl = 
-\`package net.allape.admin.entity
-
-/**
- * \${table.comment}
- */
-@Data
-public class \${TableName} extends BaseEntity {
-    \${filteredFields.map(field => 
-    \`
-    /**
-     * \${field.comment}
-     */
-    private \${field.newType} \${field.newName};
-\`
-    ).join('')}
-}
-\`;
-// \`package net.allape.admin.controller
-//
-// /**
-//  * \${table.comment}
-//  */
-// @RequestMapping("/\${table.name.replaceAll('_', '-')}")
-// @RestController
-// public class \${TableName}Controller extends BaseController<\${TableName}> {
-//     @PostMapping('/')
-//     public Response CRUD(@RequestBody data) {
-//         return Response.i(Response.Code.OK, this.\${tableName}Service.crud(data));
-//     }
-// }
-// \`;
-
-// 必须存在一个return语句, 因为模板执行方式是: (new Function(依赖 + 模板内容))()的返回值
-return tpl;`;
 
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
@@ -230,74 +173,6 @@ ${PRESET_DEFINITIONS}
     setEM,
   ]);
 
-  const ele = useMemo(() =>
-      <LoadingContainer style={{padding: '5px'}} loading={loading}>
-        {database ?
-          <>
-            <Typography color="textSecondary">{database.name}</Typography>
-            <Divider />
-            {tables ?
-              <>
-                {fields ?
-                  <List component="nav">
-                    <ListItem button onClick={() => setFields(undefined)}>
-                      <ListItemText primary={
-                        <div className="text-with-icon">
-                          <KeyboardBackspaceIcon className="icon"/>
-                          <span>返回</span>
-                        </div>
-                      } secondary={table?.name} />
-                    </ListItem>
-                    <ListItem button onClick={() => setEditorDefinitions()}>
-                      <ListItemText primary="将该表数据注入至模板编辑器依赖" secondary="该操作将覆盖已有依赖" />
-                    </ListItem>
-                    {fields.map((field, index) =>
-                      <ListItem key={index} button>
-                        <ListItemText style={{paddingLeft: '20px'}}
-                                      primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`}
-                                      secondary={field.comment} />
-                      </ListItem>)}
-                  </List>
-                  :
-                  <List component="nav">
-                    <ListItem button onClick={() => setTables(undefined)}>
-                      <ListItemText primary={
-                        <div className="text-with-icon">
-                          <KeyboardBackspaceIcon className="icon"/>
-                          <span>返回</span>
-                        </div>
-                      } />
-                    </ListItem>
-                    {tables.map((table, index) =>
-                      <ListItem key={index} button onClick={() => onTableClick(table)}>
-                        <ListItemText style={{paddingLeft: '20px'}}
-                                      primary={`${schema?.name}.${table.name}`}
-                                      secondary={table.comment} />
-                      </ListItem>)}
-                  </List>
-                }
-              </>
-              :
-              <List component="nav">
-                {database.schemas.map((schema, index) =>
-                  <ListItem key={index} button
-                            onClick={() => onDatabaseClick(schema)}>
-                    <ListItemText primary={schema.name} />
-                  </ListItem>)}
-              </List>
-            }
-          </>
-          :
-          <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>请先建立连接</Typography>
-        }
-      </LoadingContainer>,
-    [
-      loading,
-      onDatabaseClick, onTableClick, setEditorDefinitions,
-      database, schema, tables, table, fields,
-    ]
-  );
-
   // endregion
 
   // region 文本编辑器
@@ -310,7 +185,7 @@ ${PRESET_DEFINITIONS}
   const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const resetTplEditor = useCallback(() => {
     if (window.confirm(`确定重置模板内容至默认模板?`)) {
-      tplEditor?.setValue(DEFAULT_TPL);
+      tplEditor?.setValue(DEFAULT_TEMPLATE);
       setTplFileName('');
     }
   }, [tplEditor]);
@@ -328,7 +203,7 @@ ${PRESET_DEFINITIONS}
         definitions,
         'file:///node_modules/dbtpl/index.js'
       );
-      const content = tplEditor?.getValue() || DEFAULT_TPL;
+      const content = tplEditor?.getValue() || DEFAULT_TEMPLATE;
       console.log(content);
       const model = me.editor.createModel(
         content,
@@ -543,7 +418,68 @@ ${PRESET_DEFINITIONS}
           </Paper>
           <Paper className="paper-item">
             <Typography variant="h6" color="textPrimary">数据库信息</Typography>
-            {ele}
+            <LoadingContainer style={{padding: '5px'}} loading={loading}>
+              {database ?
+                <>
+                  <Typography color="textSecondary">{database.name}</Typography>
+                  <Divider />
+                  <div style={{maxHeight: 500, overflow: 'auto'}}>
+                    {tables ?
+                      <>
+                        {fields ?
+                          <List component="nav">
+                            <ListItem button onClick={() => setFields(undefined)}>
+                              <ListItemText primary={
+                                <div className="text-with-icon">
+                                  <KeyboardBackspaceIcon className="icon"/>
+                                  <span>返回</span>
+                                </div>
+                              } secondary={table?.name} />
+                            </ListItem>
+                            <ListItem button onClick={() => setEditorDefinitions()}>
+                              <ListItemText primary="将该表数据注入至模板编辑器依赖" secondary="该操作将覆盖已有依赖" />
+                            </ListItem>
+                            {fields.map((field, index) =>
+                              <ListItem key={index} button>
+                                <ListItemText style={{paddingLeft: '20px'}}
+                                              primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`}
+                                              secondary={field.comment} />
+                              </ListItem>)}
+                          </List>
+                          :
+                          <List component="nav">
+                            <ListItem button onClick={() => setTables(undefined)}>
+                              <ListItemText primary={
+                                <div className="text-with-icon">
+                                  <KeyboardBackspaceIcon className="icon"/>
+                                  <span>返回</span>
+                                </div>
+                              } />
+                            </ListItem>
+                            {tables.map((table, index) =>
+                              <ListItem key={index} button onClick={() => onTableClick(table)}>
+                                <ListItemText style={{paddingLeft: '20px'}}
+                                              primary={`${schema?.name}.${table.name}`}
+                                              secondary={table.comment} />
+                              </ListItem>)}
+                          </List>
+                        }
+                      </>
+                      :
+                      <List component="nav">
+                        {database.schemas.map((schema, index) =>
+                          <ListItem key={index} button
+                                    onClick={() => onDatabaseClick(schema)}>
+                            <ListItemText primary={schema.name} />
+                          </ListItem>)}
+                      </List>
+                    }
+                  </div>
+                </>
+                :
+                <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>请先建立连接</Typography>
+              }
+            </LoadingContainer>
           </Paper>
         </Grid>
         <Grid item xs={12} lg={8} xl={9}>
@@ -551,7 +487,7 @@ ${PRESET_DEFINITIONS}
             <Grid item xs={12} lg={12}>
               <Paper>
                 <div className="typo-with-right-button">
-                  <Typography variant="h6" color="textPrimary">模板(javascript w/ CommonJS)</Typography>
+                  <Typography variant="h6" color="textPrimary">模板(javascript)</Typography>
                   <div className="buttons">
                     <Button variant={'outlined'} onClick={openTFD}>模板文件列表</Button>
                     <LoadingButton variant={'contained'} color={'primary'}
