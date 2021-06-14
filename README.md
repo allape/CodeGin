@@ -1,4 +1,11 @@
-# 代码生成器 React + ElectronJs
+# CodeGin | 代码生成器 | Code Generator
+
+### ⚠️ 包支持不足 | Legacy ⚠️
+- npm mysql 不支持mysql8.0以上的默认鉴权方式, 需要使用mysql_native_password的加密方式的用户才行
+- npm mysql DOES NOT support the default auth method above mysql 8.0, password encryption MUST be mysql_native_password
+- XXX IDENTIFIED WITH mysql_native_password BY 'password'
+- 后期解决方式要么内置mysql client或使用golang重新写一个底层应用, 然后使用node的child_process去执行
+- Will embed mysql-client or using golang with nodejs.child_process to apply all SQL execution in the future
 
 ### 技术栈 | Technologies
 - [react](https://reactjs.org/)
