@@ -2,9 +2,16 @@ const { app, ipcMain, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const mysql = require('mysql');
+const os = require('os');
+
+// 当前应用的配置文件夹
+const APP_HOME_DIR = path.join(os.homedir(), '.code-gin');
+if (!fs.existsSync(APP_HOME_DIR)) {
+    fs.mkdirSync(APP_HOME_DIR, { recursive: true });
+}
 
 // 模板文件文件夹
-const SAVED_TEMPLATE_FILES_FOLDER = path.join(app.getAppPath(), 'tpl');
+const SAVED_TEMPLATE_FILES_FOLDER = path.join(APP_HOME_DIR, 'tpl');
 
 function createWindow () {
     const win = new BrowserWindow({
