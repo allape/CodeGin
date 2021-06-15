@@ -39,9 +39,9 @@ func main() {
             "'{\"username\":\"root\",\"password\":\"\",\"host\":\"localhost\",\"port\":3306}' " +
             "SQL [arg1 arg2 arg3 ...]")
     }
-    //for _, arg := range args {
-    //    log.Printf("%s", arg)
-    //}
+    for _, arg := range args {
+       log.Printf("%s", arg)
+    }
 
     var connInfo ConnectionInfo
     err := json.Unmarshal([]byte(args[0]), &connInfo)

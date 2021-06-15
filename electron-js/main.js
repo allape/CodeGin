@@ -1,8 +1,11 @@
 const { app, ipcMain, BrowserWindow } = require('electron');
 const fs = require('fs');
 const path = require('path');
-const mysql = require('mysql');
 const os = require('os');
+
+// const mysql = require('mysql');
+const { exec } = require("child_process");
+const GO_APP_PATH = path.join(app.getAppPath(), 'go-app');
 
 // 当前应用的配置文件夹
 const APP_HOME_DIR = path.join(os.homedir(), '.code-gin');
@@ -20,7 +23,7 @@ function createWindow () {
         minWidth: 800,
         minHeight: 600,
         title: '代码生成器',
-        icon: './app/icon.svg',
+        icon: path.join(app.getAppPath(), 'app', 'icon.svg'),
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,
@@ -37,18 +40,35 @@ function createWindow () {
 
 async function execute(conn, sql, params) {
     return new Promise((resolve, reject) => {
-        const queried = conn.query(
-            sql,
-            params,
-            (err, results, fields) => {
-                if (err) {
-                    reject(err);
-                    return;
+        // const queried = conn.query(
+        //     sql,
+        //     params,
+        //     (err, results, fields) => {
+        //         if (err) {
+        //             reject(err);
+        //             return;
+        //         }
+        //         resolve({ results, fields });
+        //     },
+        // );
+        // console.log(queried.sql);
+        exec(`${GO_APP_PATH} \'${JSON.stringify(conn)}\' ${JSON.stringify(sql)} ${(params || []).map(p => `${JSON.stringify(p)}`)}`, (error, stdout, stderr) => {
+            try {
+                if (error) {
+                    throw new Error(`error: ${error.message}`);
+                } else if (stderr) {
+                    // FIXME 怎么跑到stderr来了
+                    throw new Error(`stderr: ${stderr}`);
                 }
-                resolve({ results, fields });
-            },
-        );
-        console.log(queried.sql);
+                const outLines = stdout.split('/n');
+                const result = { results: JSON.parse(outLines[outLines.length - 1]), fields: [] };
+                console.log('execute sql results', sql, params, result);
+                resolve(result);
+            } catch (e) {
+                console.error('error occurred while execute sql', sql, params, e);
+                reject(e);
+            }
+        });
     });
 }
 
@@ -97,16 +117,17 @@ app.whenReady().then(() => {
     const GetConnectionInfoChannel = 'get-connection-info';
     ipcMain.on(GetConnectionInfoChannel, (e, args) => {
         try {
-            conn = mysql.createConnection({
-                ...args,
-                user: args.username,
-                timeout: 10000,
-            });
+            // conn = mysql.createConnection({
+            //     ...args,
+            //     user: args.username,
+            //     timeout: 10000,
+            // });
+            conn = args;
             execute(conn, `SHOW DATABASES`).then(res => {
                 e.reply(GetConnectionInfoChannel, {
                     name: `${args.username}@${args.host}:${args.port}`,
                     schemas: res.results.map(i => ({
-                        name: i.Database,
+                        name: i['Database'],
                     })),
                 });
             }).catch(err => e.reply(GetConnectionInfoChannel, err));
