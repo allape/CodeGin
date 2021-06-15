@@ -13,6 +13,7 @@ function createWindow () {
         minWidth: 800,
         minHeight: 600,
         title: '代码生成器',
+        icon: './app/icon.svg',
         webPreferences: {
             contextIsolation: false,
             nodeIntegration: true,

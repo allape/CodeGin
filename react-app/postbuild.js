@@ -1,3 +1,4 @@
+// 复制打包内容至electron中
 const fs = require('fs');
 const APP_FOLDER = '../electron-js/app/';
 if (fs.existsSync(APP_FOLDER)) fs.rmdirSync(APP_FOLDER, { recursive: true });
