@@ -12,7 +12,8 @@
 - [typescript](http://typescriptlang.org/)
 - [monaco-editor](https://github.com/microsoft/monaco-editor)
 - [electron-js](https://www.electronjs.org/)
-- [mysql](https://www.mysql.com/) | [npm-mysql](https://www.npmjs.com/package/mysql)
+- [mysql](https://www.mysql.com/)
+- [golang](https://golang.org/)
 
 #### react
 ```shell
@@ -46,4 +47,19 @@ npm run-script pack-macos
 #e lectron-packager --help # npm install -g electron-packager
 # 或 | or
 # node ./node_modules/.bin/electron-packager --help
+```
+
+#### golang
+```shell
+cd golang
+# 运行go | Run go app cli
+go run main.go '{"username":...}' SQL arg1 arg2
+
+# 打包 | Build
+# https://stackoverflow.com/questions/20728767/all-possible-goos-value
+# https://github.com/golang/go/commit/1eebb91a5828c26532125b9464c92f721cd79d0f
+
+# (打包 | Build for) MacOS x64
+rm -Rf ./go-app
+GOOS=darwin GOARCH=amd64 go build -o go-app main.go
 ```
