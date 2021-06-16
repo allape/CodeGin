@@ -38,7 +38,7 @@ npm run-script pack-macos
 # 显示打包帮助内容 | Display electron-packager manual
 ./node_modules/.bin/electron-packager --help
 # 或 | or
-#e lectron-packager --help # npm install -g electron-packager
+# electron-packager --help # npm install -g electron-packager
 # 或 | or
 # node ./node_modules/.bin/electron-packager --help
 
