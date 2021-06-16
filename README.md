@@ -47,6 +47,8 @@ npm run-script pack-macos
 #e lectron-packager --help # npm install -g electron-packager
 # 或 | or
 # node ./node_modules/.bin/electron-packager --help
+
+# MacOS图标生成参考/resources/png2icns.sh
 ```
 
 #### golang
