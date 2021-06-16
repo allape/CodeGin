@@ -2,6 +2,7 @@ package main
 
 import (
     "database/sql"
+    "encoding/base64"
     "encoding/json"
     "fmt"
     _ "github.com/go-sql-driver/mysql"
@@ -25,22 +26,27 @@ func PanicErr(err interface{}) {
 }
 
 func String2Interface(str []string) []interface{} {
-    results := make([]interface{}, len(str))
-    for s := range str {
+    results := make([]interface{}, 0, len(str))
+    for _, s := range str {
         results = append(results, s)
     }
     return results
 }
 
 func main() {
-    args := os.Args[1:]
-    if len(args) < 2 {
+    rawArgs := os.Args[1:]
+    if len(rawArgs) < 2 {
         log.Fatalf("usage: ./go " +
-            "'{\"username\":\"root\",\"password\":\"\",\"host\":\"localhost\",\"port\":3306}' " +
-            "SQL [arg1 arg2 arg3 ...]")
+            "$(base64 <<< '{\"username\":\"root\",\"password\":\"\",\"host\":\"localhost\",\"port\":3306}') " +
+            "$(base64 <<< SQL) [$(base64 <<< arg1) $(base64 <<< arg2) $(base64 <<< arg3) ...]")
     }
-    for _, arg := range args {
-       log.Printf("%s", arg)
+
+    args := make([]string, 0, len(rawArgs))
+    for _, arg := range rawArgs {
+        //fmt.Println(arg)
+        decodedArg, err := base64.StdEncoding.DecodeString(arg)
+        PanicErr(err)
+        args = append(args, string(decodedArg))
     }
 
     var connInfo ConnectionInfo
@@ -110,5 +116,5 @@ func main() {
     }
     jsonData, err := json.Marshal(tableData)
     PanicErr(err)
-    print(string(jsonData))
+    fmt.Println(string(jsonData))
 }

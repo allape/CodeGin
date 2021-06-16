@@ -16,6 +16,14 @@ if (!fs.existsSync(APP_HOME_DIR)) {
 // 模板文件文件夹
 const SAVED_TEMPLATE_FILES_FOLDER = path.join(APP_HOME_DIR, 'tpl');
 
+/**
+ * 字符串转base64
+ * @param s 转换的字符串
+ */
+function toBase64(s) {
+    return Buffer.from(s).toString('base64');
+}
+
 function createWindow () {
     const win = new BrowserWindow({
         width: 800,
@@ -52,16 +60,15 @@ async function execute(conn, sql, params) {
         //     },
         // );
         // console.log(queried.sql);
-        exec(`${GO_APP_PATH} \'${JSON.stringify(conn)}\' ${JSON.stringify(sql)} ${(params || []).map(p => `${JSON.stringify(p)}`)}`, (error, stdout, stderr) => {
+        exec(`${GO_APP_PATH} "${toBase64(JSON.stringify(conn))}" ${toBase64(sql)} ${(params || []).map(p => `${toBase64(p)}`)}`, (error, stdout, stderr) => {
             try {
                 if (error) {
                     throw new Error(`error: ${error.message}`);
                 } else if (stderr) {
-                    // FIXME 怎么跑到stderr来了
                     throw new Error(`stderr: ${stderr}`);
                 }
-                const outLines = stdout.split('/n');
-                const result = { results: JSON.parse(outLines[outLines.length - 1]), fields: [] };
+                console.log('execute sql raw results: ', stdout);
+                const result = { results: JSON.parse(stdout), fields: [] };
                 console.log('execute sql results', sql, params, result);
                 resolve(result);
             } catch (e) {
