@@ -3,6 +3,7 @@ if [ -z "$1" ]; then
   echo "usage: ./png2icns.sh image.png"
   exit 1
 fi
+rm -Rf pngpic.iconset
 mkdir pngpic.iconset
 sips -z 16 16 $1 --out pngpic.iconset/icon_16x16.png
 sips -z 32 32 $1 --out pngpic.iconset/icon_16x16@2x.png
