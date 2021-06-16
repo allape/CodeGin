@@ -140,14 +140,14 @@ export async function getSavedTplFiles(): Promise<TemplateFile[]> {
   }
   return new Promise(resolve => setTimeout(() => resolve([
     {
-      id: '电了么后台管理系统',
-      content: `电了么后台管理系统`,
+      id: '后台管理系统',
+      content: `后台管理系统`,
       createTime: Date.now(),
       updateTime: Date.now(),
     },
     {
-      id: '电了么后台管理系统-带城市',
-      content: `电了么后台管理系统-带城市`,
+      id: '后台管理系统-带权限',
+      content: `后台管理系统-带权限`,
       createTime: Date.now(),
       updateTime: Date.now(),
     },
