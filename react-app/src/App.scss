@@ -6,6 +6,19 @@
       margin-bottom: 20px;
     }
   }
+
+  .alert-wrapper {
+    position: sticky;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    flex-wrap: nowrap;
+    .MuiAlert-message {
+      max-width: calc(100% - 34px);
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+    }
+  }
   .form-wrapper {
     margin-top: 20px;
     position: relative;

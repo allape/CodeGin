@@ -383,7 +383,7 @@ ${PRESET_DEFINITIONS}
     <div className="code-generator-wrapper">
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
-          <Alert severity={errorMessage ? 'error' : 'success'}>
+          <Alert className="alert-wrapper" severity={errorMessage ? 'error' : 'success'}>
             <AlertTitle>{errorMessage ? '错误' : '正常'}</AlertTitle>
             {errorMessage || '一切正常'}
           </Alert>
