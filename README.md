@@ -9,6 +9,11 @@
 - [mysql](https://www.mysql.com/)
 - [golang](https://golang.org/)
 
+### 开发必要工具 | Environments requirements
+- [git](https://git-scm.com/)
+- [nodejs](https://nodejs.org/)
+- [golang](https://golang.org/)
+
 #### react
 ```shell
 cd react-app
@@ -26,13 +31,24 @@ npm build
 #### electron js
 ```shell
 cd electron-js
+
+# 启动前准备 | Prepares before start
+# MacOS
+npm run-script macos-start-prepare
+# Windows
+npm run-script windows-start-prepare
+
 # 正常启动 | Start
 npm start
 # 调试页面启动 | Start for web debug
 npm run-script start-web
 
-# MacOS 打包 | Build for MacOS
+# MacOS 打包 | Build for MacOS on MacOS(cross platform build is explained in electron-packager doc)
 npm run-script pack-macos
+
+# Windows 打包 | Build for Windows on windows
+npm run-script pack-windows
+
 # 其他平台打包参考文档 | Build for another platforms
 # https://github.com/electron/electron-packager
 # 显示打包帮助内容 | Display electron-packager manual

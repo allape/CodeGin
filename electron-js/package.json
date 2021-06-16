@@ -4,15 +4,16 @@
   "description": "代码生成器",
   "main": "main.js",
   "scripts": {
+    "windows-start-prepare": "node pre.js && .\\go-build.bat",
+    "macos-start-prepare": "node pre.js && chmod +x ./go-build.sh && ./go-build.sh",
+
     "start": "electron .",
-    "prestart": "node pre.js",
     "start-web": "ELEC_APP_TYPE=web electron .",
-    "prestart-web": "node pre.js",
 
-    "prepack-windows": "node pre.js && chmod +x ./go-build.sh && ./go-build.sh windows",
-    "pack-windows": "electron-packager . CodeGin --icon=./icon.png --platform=win32 --arch=x64 --out=build --overwrite",
+    "prepack-windows": "npm run-script windows-start-prepare",
+    "pack-windows": "electron-packager . CodeGin --icon=./icon.ico --platform=win32 --arch=x64 --out=build --overwrite",
 
-    "prepack-macos": "node pre.js && chmod +x ./go-build.sh && ./go-build.shd",
+    "prepack-macos": "npm run-script macos-start-prepare",
     "pack-macos": "electron-packager . CodeGin --icon=./icon.icns --platform=darwin --arch=x64 --out=build --overwrite"
   },
   "keywords": [

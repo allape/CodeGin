@@ -3,6 +3,7 @@ app
 tpl
 build
 go-app
+go-app.*
 icon.png
 icon.icns
 icon.ico
