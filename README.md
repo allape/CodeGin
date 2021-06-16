@@ -49,7 +49,7 @@ npm run-script pack-macos
 ```shell
 cd golang
 # 运行go | Run go app cli
-go run main.go '{"username":...}' SQL arg1 arg2
+go run main.go $(base64 <<< '{"username":...}') $(base64 <<< SQL) $(base64 <<< arg1) $(base64 <<< arg2) $(base64 <<< arg3) ...
 
 # 打包 | Build
 # https://stackoverflow.com/questions/20728767/all-possible-goos-value
