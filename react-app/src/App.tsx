@@ -201,7 +201,7 @@ ${PRESET_DEFINITIONS}
       });
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
         definitions,
-        'file:///node_modules/dbtpl/index.js'
+        'file:///node_modules/code-gin/index.js'
       );
       const content = tplEditor?.getValue() || DEFAULT_TEMPLATE;
       console.log(content);

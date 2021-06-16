@@ -17,7 +17,7 @@ export interface TemplateFile {
 // 默认的内容
 export const DEFAULT_TEMPLATE =
 `// 不要删除该import或添加其他的import语句, 执行模板的时候会替换掉第一句import, 这个仅仅是为了使用monaco editor的语法提示
-import {database, table, fields, fieldMap, ${DEFINITION_IMPORT}} from 'dbtpl';
+import {database, table, fields, fieldMap, ${DEFINITION_IMPORT}} from 'code-gin';
 
 // 驼峰的表名
 const tableName = toCamelCase(table.name);
