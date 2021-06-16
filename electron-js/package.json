@@ -5,9 +5,12 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "prestart": "node pre.js",
     "start-web": "ELEC_APP_TYPE=web electron .",
-    "prepack-macos": "chmod +x ./go-build.sh && ./go-build.sh",
-    "pack-macos": "electron-packager . CodeGin --platform=darwin --arch=x64 --out=build --overwrite"
+    "prestart-web": "node pre.js",
+
+    "prepack-macos": "node pre.js && chmod +x ./go-build.sh && ./go-build.sh",
+    "pack-macos": "electron-packager . CodeGin --icon=./icon.icns --platform=darwin --arch=x64 --out=build --overwrite"
   },
   "keywords": [
     "code-generator"
