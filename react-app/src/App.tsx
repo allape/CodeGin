@@ -19,7 +19,7 @@ import {
 } from "@material-ui/core";
 import {Connection} from './model/connection';
 import Database, {Field, Schema, Table} from './model/database';
-import {connect, getFields, getTableDDL, getTables, saveTplFile, stringifyError} from './api/api';
+import {connect, getFields, getTableDDL, getTables, saveToFile, saveTplFile, stringifyError} from './api/api';
 import LoadingButton from './component/loading/LoadingButton';
 import LoadingContainer from './component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
@@ -158,7 +158,7 @@ export default function App() {
 
   // region 直接解析模板并导出为结果文件
 
-  const [tplFileSelectorDialogOpen, setTFSelectorDO] = useState(true);
+  const [tplFileSelectorDialogOpen, setTFSelectorDO] = useState(false);
   const openTFSelectorD = useCallback(() => {
     setTFSelectorDO(true);
   }, []);
@@ -167,8 +167,34 @@ export default function App() {
   }, []);
 
   const onFileSelectWithFilename = useCallback((files: TemplateFileSelector[]) => {
-    console.log(files);
-  }, []);
+    if (!fields) {
+      setEM(t('dependency.noTableData'));
+      return;
+    }
+    // 获取依赖
+    const definition = define(t, database!, table!, fields, ddl);
+    // 根据模板文件进行导出
+    try {
+      for (const file of files) {
+        const result = run(t, definition, file.content);
+        if (!result.filename) {
+          setEM(t('outputResult.hasNoFilename', { file }));
+          return;
+        }
+        promiseHandler(saveToFile(file.__filename!, result.filename, result.result)).then(() => {
+          hideTFSelectorD();
+        });
+      }
+      alert(t('outputResult.exportSuccess'));
+    } catch (e) {
+      setEM(stringifyError(e));
+    }
+  }, [
+    t,
+    database, table, fields, ddl,
+    setEM,
+    promiseHandler, hideTFSelectorD,
+  ]);
 
   // endregion
 
@@ -176,8 +202,6 @@ export default function App() {
 
   // region 文本编辑器
 
-  // 模板文件列表刷新器
-  const [tplFilesReloadKey, reloadTplFiles] = useCounter();
   // 当前打开/编辑的文件名
   const [tplFileName, setTplFileName] = useState('');
 
@@ -257,9 +281,8 @@ export default function App() {
   const doSaveTplFile = useCallback((filename: string, content: string) => {
     promiseHandler(saveTplFile(filename, content)).then(() => {
       hideTplFileDialog();
-      reloadTplFiles();
     });
-  }, [hideTplFileDialog, reloadTplFiles, promiseHandler]);
+  }, [hideTplFileDialog, promiseHandler]);
   // 文件名提交
   const onTplFileDialogSubmit = useCallback((e) => {
     e.preventDefault();
@@ -429,6 +452,9 @@ export default function App() {
                               <ListItemText primary={t('connection.database.fields.injectionPrimary')}
                                             secondary={t('connection.database.fields.injectionSecondary')} />
                             </ListItem>
+                            <ListItem button onClick={() => openTFSelectorD()}>
+                              <ListItemText primary={t('connection.database.fields.export')} />
+                            </ListItem>
                             {fields.map((field, index) =>
                               <ListItem key={index} button>
                                 <ListItemText style={{paddingLeft: '20px'}}
@@ -477,12 +503,17 @@ export default function App() {
             <Grid item xs={12} lg={12}>
               <Paper>
                 <div className="typo-with-right-button">
-                  <Typography variant="h6" color="textPrimary">{t('template.title')}(javascript)</Typography>
+                  <Typography className="typo" variant="h6" color="textPrimary">{t('template.title')}(javascript) {tplFileName}</Typography>
                   <div className="buttons">
                     <Button variant={'outlined'} onClick={openTFD}>{t('template.fileList')}</Button>
                     <LoadingButton variant={'contained'} color={'primary'}
                                    loading={loading}
-                                   onClick={openTplFileDialog}>{tplFileName ? t('template.saveFileToXXXButton', { filename: tplFileName.substring(0, 3) }) : t('template.saveFileButton')}</LoadingButton>
+                                   onClick={openTplFileDialog}>
+                      {tplFileName ?
+                        t('template.saveFileToXXXButton', { filename: tplFileName.substring(0, 3) })
+                        : t('template.saveFileButton')
+                      }
+                    </LoadingButton>
                     <Button variant={'outlined'} onClick={resetTplEditor}>{t('template.resetEditor')}</Button>
                     <Button variant={'contained'} color={'primary'} onClick={printResult}>{t('template.generate')}</Button>
                   </div>

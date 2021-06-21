@@ -119,7 +119,7 @@ export default function TemplateFiles(props: TemplateFilesProps) {
 
   useEffect(() => {
     getTemplateFiles();
-  }, [getTemplateFiles]);
+  }, [getTemplateFiles, open]);
 
   return<Dialog open={!!open} onClose={onClose}>
     <Paper className="dialog-content-wrapper template-files-dialog">

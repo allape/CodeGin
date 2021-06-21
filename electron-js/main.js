@@ -199,7 +199,12 @@ app.whenReady().then(() => {
     const SaveToFileChannel = 'save-to-file';
     ipcMain.on(SaveToFileChannel, (e, args) => {
         try {
-            fs.writeFileSync(args.filename, args.content);
+            if (!fs.existsSync(args.folder)) {
+                fs.mkdirSync(args.folder, { recursive: true });
+            } else if (!fs.statSync(args.folder).isDirectory()) {
+                throw new Error(`${args.folder} is not a directory`);
+            }
+            fs.writeFileSync(path.join(args.folder, args.filename), args.content);
             e.returnValue = true;
         } catch (err) {
             e.returnValue = err;

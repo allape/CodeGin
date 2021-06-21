@@ -9,5 +9,5 @@ export interface Electron {
   getFields(schemaName: string, table: string): Promise<Field[]>;
   getSavedTplFiles(): Promise<TemplateFile[]>;
   saveTplFile(name: string, content: string): Promise<boolean>;
-  saveToFile(filename: string, content: string): Promise<boolean>;
+  saveToFile(folder: string, filename: string, content: string): Promise<boolean>;
 }

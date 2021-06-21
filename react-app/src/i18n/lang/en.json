@@ -17,7 +17,8 @@
       "notConnectionPlaceholder": "Please connect to a database server first",
       "fields": {
         "injectionPrimary": "Inject table info into template editor dependencies",
-        "injectionSecondary": "This operation will override existing dependencies"
+        "injectionSecondary": "This operation will override existing dependencies",
+        "export": "Select Template files and export results"
       }
     }
   },
@@ -70,6 +71,8 @@
       "clear": "Clear",
       "noDataPlaceholder": "No Data"
     },
-    "title": "Result"
+    "title": "Result",
+    "hasNoFilename": "\"{{file.id}}\" does not return a valid filename",
+    "exportSuccess": "Export Finished"
   }
 }

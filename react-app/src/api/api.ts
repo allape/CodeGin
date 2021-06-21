@@ -168,10 +168,11 @@ export async function saveTplFile(name: string, content: string): Promise<boolea
 
 /**
  * 保存内容至文件
- * @param filename 文件全路径
+ * @param folder 文件夹名称
+ * @param filename 文件名称
  * @param content 文件内容
  */
-export async function saveToFile(filename: string, content: string): Promise<boolean> {
-  if (production) return electron.saveToFile(filename, content);
+export async function saveToFile(folder: string, filename: string, content: string): Promise<boolean> {
+  if (production) return electron.saveToFile(folder, filename, content);
   return true;
 }

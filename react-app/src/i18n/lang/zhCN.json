@@ -17,7 +17,8 @@
       "notConnectionPlaceholder": "请先建立连接",
       "fields": {
         "injectionPrimary": "将该表数据注入至模板编辑器依赖",
-        "injectionSecondary": "该操作将覆盖已有依赖"
+        "injectionSecondary": "该操作将覆盖已有依赖",
+        "export": "选择模板并导出结果"
       }
     }
   },
@@ -70,6 +71,8 @@
       "clear": "清空",
       "noDataPlaceholder": "暂无数据"
     },
-    "title": "结果"
+    "title": "结果",
+    "hasNoFilename": "{{file.id}}没有返回有效的文件名称",
+    "exportSuccess": "全部导出成功"
   }
 }
