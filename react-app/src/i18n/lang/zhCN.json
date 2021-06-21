@@ -1,0 +1,71 @@
+{
+  "error": {
+    "notOK": "错误",
+    "ok": "正常",
+    "okContent": "一切正常"
+  },
+  "connection": {
+    "title": "连接信息",
+    "host": "Host",
+    "post": "Port",
+    "username": "账号",
+    "password": "密码",
+    "connect": "连接",
+    "database": {
+      "title": "数据库信息",
+      "back": "返回",
+      "notConnectionPlaceholder": "请先建立连接",
+      "fields": {
+        "injectionPrimary": "将该表数据注入至模板编辑器依赖",
+        "injectionSecondary": "该操作将覆盖已有依赖"
+      }
+    }
+  },
+  "dependency": {
+    "noTableData": "当前未加载任何Table, 无法导入依赖!",
+    "title": "依赖"
+  },
+  "template": {
+    "default": {
+      "DDL": "DDL",
+      "database": "数据库",
+      "table": "表数据",
+      "fields": "字段列表",
+      "fieldMap": "字段列表Map",
+      "presetFunctions": "预设的方法"
+    },
+    "resetConfirm": "确定重置模板内容至默认模板?",
+    "loadFromFile": "点击确定将加载{{file.id}}, 并且当前编辑的内容将会丢失",
+    "saveWithEmptyFileName": "请输入文件名称",
+    "noReturnStatement": "没有找到return语句",
+    "editorNotInitializedYet": "编辑器暂时未初始化完成",
+    "title": "模板编辑器",
+    "fileList": "模板文件列表",
+    "fileListDialog": {
+      "title": "保存了的模板",
+      "close": "关闭",
+      "reload": "刷新"
+    },
+    "fileNameDialog": {
+      "filename": "文件名称",
+      "cancel": "取消",
+      "save": "保存"
+    },
+    "saveFileButton": "保存",
+    "saveFileToXXXButton": "保存至{{filename}}...",
+    "resetEditor": "重置",
+    "generate": "生成结果"
+  },
+  "outputResult": {
+    "emptyHistoryConfirm": "确定清空输出历史?",
+    "history": "历史记录",
+    "resultLng": "结果语言格式",
+    "historyDialog": {
+      "title": "结果输出历史",
+      "close": "关闭",
+      "clear": "清空",
+      "noDataPlaceholder": "暂无数据"
+    },
+    "title": "结果"
+  }
+}

@@ -34,6 +34,7 @@ import TemplateFiles from './view/TemplateFiles';
 import {useCounter} from './component/loading/loading';
 import {PRESET_DEFINITIONS} from './model/definition';
 import useStorableState from './component/storable-state/storable-state';
+import { useTranslation } from 'react-i18next';
 
 // 保存连接信息的key
 const CONNECTION_STORAGE_KEY = 'connection_storage_key';
@@ -64,6 +65,8 @@ const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
 
 export default function App() {
+
+  const { t } = useTranslation();
 
   const [promiseHandler, loading, , , errorMessage, setEM] = usePromiseHandler(stringifyError);
 
@@ -141,34 +144,35 @@ export default function App() {
   // 将当前显示字段的表的数据导入编辑器依赖
   const setEditorDefinitions = useCallback(() => {
     if (!fields) {
-      setEM('当前未加载任何Table, 无法导入依赖!');
+      setEM(t('dependency.noTableData'));
       return;
     }
 
     setDefinitions(`
-// DDL
+// ${t('template.default.DDL')}
 ${
   /*ddl.split('\n').map(i => `// ${i}`).join('\n')*/
   '// ' + ddl.replace(/\n/g, '\n// ')
 }
 
-// 数据库数据
+// ${t('template.default.database')}
 export const database = ${JSON.stringify(database, undefined, 4)};
 
-// 表数据
+// ${t('template.default.table')}
 export const table = ${JSON.stringify(table, undefined, 4)};
 
-// 字段列表
+// ${t('template.default.fields')}
 export const fields = ${JSON.stringify(fields, undefined, 4)};
 
-// 字段列表Map
+// ${t('template.default.fieldMap')}
 export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name as string]:c}), {}), undefined, 4)};
 
-// 预设的方法
+// ${t('template.default.presetFunctions')}
 ${PRESET_DEFINITIONS}
 `);
     setTab(0);
   }, [
+    t,
     database, table, fields, ddl,
     setEM,
   ]);
@@ -184,11 +188,11 @@ ${PRESET_DEFINITIONS}
 
   const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const resetTplEditor = useCallback(() => {
-    if (window.confirm(`确定重置模板内容至默认模板?`)) {
+    if (window.confirm(t('template.resetConfirm'))) {
       tplEditor?.setValue(DEFAULT_TEMPLATE);
       setTplFileName('');
     }
-  }, [tplEditor]);
+  }, [t, tplEditor]);
   const tplEditorWillMount = useCallback(
     (monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -233,12 +237,12 @@ ${PRESET_DEFINITIONS}
   const hideTFD = useCallback(() => setTFDO(false), []);
 
   const loadTemplateFile = useCallback((file: TemplateFile) => {
-    if (window.confirm(`点击确定将加载"${file.id}", 并且当前编辑的内容将会丢失`)) {
+    if (window.confirm(t('template.loadFromFile', { file }))) {
       tplEditor?.setValue(file.content);
       setTplFileName(file.id);
       hideTFD();
     }
-  }, [tplEditor, hideTFD]);
+  }, [t, tplEditor, hideTFD]);
 
   // endregion
 
@@ -266,7 +270,7 @@ ${PRESET_DEFINITIONS}
     e.preventDefault();
     let filename: string = e.target.tplFileName?.value || '';
     if (!filename) {
-      setTFNM('请输入文件名称!');
+      setTFNM(t('template.saveWithEmptyFileName'));
       return;
     }
     if (!filename.endsWith('.js')) {
@@ -274,7 +278,7 @@ ${PRESET_DEFINITIONS}
     }
     setTplFileName(filename);
     doSaveTplFile(filename, tplEditor?.getValue() || '');
-  }, [doSaveTplFile, tplEditor]);
+  }, [t, doSaveTplFile, tplEditor]);
   // 保存
   const onTplFileSave = useCallback(() => {
     openTplFileDialog();
@@ -340,7 +344,7 @@ ${PRESET_DEFINITIONS}
         console.log(sourceCode);
         const r = new Function(sourceCode)();
         if (r === undefined) {
-          setEM('没有找到return语句');
+          setEM(t('template.noReturnStatement'));
         } else {
           applyResult(r);
           setEM('');
@@ -358,9 +362,9 @@ ${PRESET_DEFINITIONS}
         setEM(stringifyError(e));
       }
     } else {
-      setEM('编辑器暂时未初始化完成');
+      setEM(t('template.editorNotInitializedYet'));
     }
-  }, [definitions, tplEditor, table, applyResult, setEM]);
+  }, [t, definitions, tplEditor, table, applyResult, setEM]);
 
   // region  输出模板日志
 
@@ -370,10 +374,10 @@ ${PRESET_DEFINITIONS}
 
   const [results, setResults] = useState<TemplateFile[]>([]);
   const emptyResults = useCallback(() => {
-    if (window.confirm('确定清空输出历史?')) {
+    if (window.confirm(t('outputResult.emptyHistoryConfirm'))) {
       setResults([]);
     }
-  }, []);
+  }, [t]);
 
   // endregion
 
@@ -384,40 +388,40 @@ ${PRESET_DEFINITIONS}
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
           <Alert className="alert-wrapper" severity={errorMessage ? 'error' : 'success'}>
-            <AlertTitle>{errorMessage ? '错误' : '正常'}</AlertTitle>
-            {errorMessage || '一切正常'}
+            <AlertTitle>{t(errorMessage ? 'error.notOK' : 'error.ok')}</AlertTitle>
+            {errorMessage || t('error.okContent')}
           </Alert>
           <Paper>
-            <Typography variant="h6" color="textPrimary">连接信息</Typography>
+            <Typography variant="h6" color="textPrimary">{t('connection.title')}</Typography>
             <form className={`form-wrapper`} onSubmit={onConnectionInfoSubmit}>
               <Grid container spacing={2}>
                 <Grid item xs={8}>
-                  <TextField required label="Host" name={'host'} defaultValue={DEFAULT_VALUE.host}
+                  <TextField required label={t('connection.host')} name={'host'} defaultValue={DEFAULT_VALUE.host}
                              error={errors.host} helperText={'Host is required'} />
                 </Grid>
                 <Grid item xs={4}>
-                  <TextField required type={'number'} label="Port" name={'port'}
+                  <TextField required type={'number'} label={t('connection.port')} name={'port'}
                              defaultValue={DEFAULT_VALUE.port!.toString()}
                              error={errors.port} helperText={'Port is required'} />
                 </Grid>
                 <Grid item xs={6}>
-                  <TextField label="Username" name={'username'} defaultValue={DEFAULT_VALUE.username} />
+                  <TextField label={t('connection.username')} name={'username'} defaultValue={DEFAULT_VALUE.username} />
                 </Grid>
                 <Grid item xs={6}>
-                  <TextField label="Password" name={'password'} defaultValue={DEFAULT_VALUE.password} />
+                  <TextField label={t('connection.password')} name={'password'} defaultValue={DEFAULT_VALUE.password} />
                 </Grid>
                 <Grid item xs={12}>
                   <div className="form-buttons">
                     <LoadingButton loading={loading}
                                    variant="contained" color="primary"
-                                   type={'submit'}>连接</LoadingButton>
+                                   type={'submit'}>{t('connection.connect')}</LoadingButton>
                   </div>
                 </Grid>
               </Grid>
             </form>
           </Paper>
           <Paper className="paper-item">
-            <Typography variant="h6" color="textPrimary">数据库信息</Typography>
+            <Typography variant="h6" color="textPrimary">{t('connection.database.title')}</Typography>
             <LoadingContainer style={{padding: '5px'}} loading={loading}>
               {database ?
                 <>
@@ -432,12 +436,13 @@ ${PRESET_DEFINITIONS}
                               <ListItemText primary={
                                 <div className="text-with-icon">
                                   <KeyboardBackspaceIcon className="icon"/>
-                                  <span>返回</span>
+                                  <span>{t('connection.database.back')}</span>
                                 </div>
                               } secondary={table?.name} />
                             </ListItem>
                             <ListItem button onClick={() => setEditorDefinitions()}>
-                              <ListItemText primary="将该表数据注入至模板编辑器依赖" secondary="该操作将覆盖已有依赖" />
+                              <ListItemText primary={t('connection.database.fields.injectionPrimary')}
+                                            secondary={t('connection.database.fields.injectionSecondary')} />
                             </ListItem>
                             {fields.map((field, index) =>
                               <ListItem key={index} button>
@@ -452,7 +457,7 @@ ${PRESET_DEFINITIONS}
                               <ListItemText primary={
                                 <div className="text-with-icon">
                                   <KeyboardBackspaceIcon className="icon"/>
-                                  <span>返回</span>
+                                  <span>{t('connection.database.back')}</span>
                                 </div>
                               } />
                             </ListItem>
@@ -477,7 +482,7 @@ ${PRESET_DEFINITIONS}
                   </div>
                 </>
                 :
-                <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>请先建立连接</Typography>
+                <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>{t('connection.database.notConnectionPlaceholder')}</Typography>
               }
             </LoadingContainer>
           </Paper>
@@ -487,14 +492,14 @@ ${PRESET_DEFINITIONS}
             <Grid item xs={12} lg={12}>
               <Paper>
                 <div className="typo-with-right-button">
-                  <Typography variant="h6" color="textPrimary">模板(javascript)</Typography>
+                  <Typography variant="h6" color="textPrimary">{t('template.title')}(javascript)</Typography>
                   <div className="buttons">
-                    <Button variant={'outlined'} onClick={openTFD}>模板文件列表</Button>
+                    <Button variant={'outlined'} onClick={openTFD}>{t('template.fileList')}</Button>
                     <LoadingButton variant={'contained'} color={'primary'}
                                    loading={loading}
-                                   onClick={openTplFileDialog}>保存{tplFileName ? `至${tplFileName.substring(0, 3)}...` : ''}</LoadingButton>
-                    <Button variant={'outlined'} onClick={resetTplEditor}>重置</Button>
-                    <Button variant={'contained'} color={'primary'} onClick={printResult}>输出结果</Button>
+                                   onClick={openTplFileDialog}>{tplFileName ? t('template.saveFileToXXXButton', { filename: tplFileName.substring(0, 3) }) : t('template.saveFileButton')}</LoadingButton>
+                    <Button variant={'outlined'} onClick={resetTplEditor}>{t('template.resetEditor')}</Button>
+                    <Button variant={'contained'} color={'primary'} onClick={printResult}>{t('template.generate')}</Button>
                   </div>
                 </div>
                 <div className="editor-wrapper">
@@ -508,12 +513,12 @@ ${PRESET_DEFINITIONS}
               <Paper style={{paddingTop: '8px'}}>
                 <div className="typo-with-right-button">
                   <Tabs value={tab} onChange={handleTabChange}>
-                    <Tab label="依赖" />
-                    <Tab label="结果" />
+                    <Tab label={t('dependency.title')} />
+                    <Tab label={t('outputResult.title')} />
                   </Tabs>
                   <div className="buttons">
-                    <Button variant={'outlined'} onClick={openRsD}>历史记录</Button>
-                    <Tooltip title="结果语言格式">
+                    <Button variant={'outlined'} onClick={openRsD}>{t('outputResult.history')}</Button>
+                    <Tooltip title={t('outputResult.resultLng').toString()}>
                       <Select value={resultType} onChange={onResultTypeChange}>
                         {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
                       </Select>
@@ -537,13 +542,13 @@ ${PRESET_DEFINITIONS}
       <Dialog open={tplFilesDialogOpen} onClose={hideTFD}>
         <Paper className="dialog-content-wrapper" style={{maxHeight: 500, minWidth: 300}}>
           <div className="typo-with-right-button">
-            <Typography variant="h6" color="textPrimary">保存了的模板</Typography>
+            <Typography variant="h6" color="textPrimary">{t('template.fileListDialog.title')}</Typography>
             <div className="buttons">
               <Button variant={'contained'} color={'secondary'}
-                             onClick={hideTFD}>关闭</Button>
+                             onClick={hideTFD}>{t('template.fileListDialog.close')}</Button>
               <LoadingButton loading={loading}
                              variant={'contained'}
-                             onClick={reloadTplFiles}>刷新</LoadingButton>
+                             onClick={reloadTplFiles}>{t('template.fileListDialog.reload')}</LoadingButton>
             </div>
           </div>
           <TemplateFiles reloadKey={tplFilesReloadKey}
@@ -554,16 +559,16 @@ ${PRESET_DEFINITIONS}
       <Dialog open={resultsDialogOpen} onClose={hideRsD}>
         <Paper className="dialog-content-wrapper" style={{maxHeight: 500, minWidth: 300}}>
           <div className="typo-with-right-button">
-            <Typography variant="h6" color="textPrimary">结果输出历史</Typography>
+            <Typography variant="h6" color="textPrimary">{t('outputResult.historyDialog.title')}</Typography>
             <div className="buttons">
               <Button variant={'contained'} color={'secondary'}
-                      onClick={hideRsD}>关闭</Button>
+                      onClick={hideRsD}>{t('outputResult.historyDialog.close')}</Button>
               <LoadingButton variant={'contained'}
-                             onClick={emptyResults}>清空</LoadingButton>
+                             onClick={emptyResults}>{t('outputResult.historyDialog.clear')}</LoadingButton>
             </div>
           </div>
           <div style={{padding: '5px 5px 0', margin: '5px 0 0'}}>
-            {results.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">暂无数据</Typography> : <></>}
+            {results.length === 0 ? <Typography variant="body1" color="textSecondary" align="center">{t('outputResult.historyDialog.noDataPlaceholder')}</Typography> : <></>}
             <List component="nav">
               {results.map((file, index) =>
                 <ListItem key={index} button onClick={() => applyResult(file.content)}>
@@ -579,13 +584,13 @@ ${PRESET_DEFINITIONS}
       </Dialog>
       <Dialog className="dialog-form-wrapper" open={tplFileSaveDialogOpen} onClose={hideTplFileDialog}>
         <form className="dialog-form" onSubmit={onTplFileDialogSubmit}>
-          <TextField name="tplFileName" label="文件名称" defaultValue={tplFileName}
+          <TextField name="tplFileName" label={t('template.fileNameDialog.filename')} defaultValue={tplFileName}
                      required autoComplete="off"
                      error={!!tplFileNameMessage} helperText={tplFileNameMessage} />
           <div className="buttons">
-            <Button variant={'contained'} disabled={loading} onClick={hideTplFileDialog}>取消</Button>
+            <Button variant={'contained'} disabled={loading} onClick={hideTplFileDialog}>{t('template.fileNameDialog.cancel')}</Button>
             <LoadingButton variant={'contained'} color={'primary'}
-                           loading={loading} type={'submit'}>保存</LoadingButton>
+                           loading={loading} type={'submit'}>{t('template.fileNameDialog.save')}</LoadingButton>
           </div>
         </form>
       </Dialog>

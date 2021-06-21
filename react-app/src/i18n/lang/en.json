@@ -1,0 +1,71 @@
+{
+  "error": {
+    "notOK": "Error",
+    "ok": "Ok",
+    "okContent": "Nothing wrong"
+  },
+  "connection": {
+    "title": "Connection Info",
+    "host": "Host",
+    "post": "Port",
+    "username": "Username",
+    "password": "Password",
+    "connect": "Connect",
+    "database": {
+      "title": "Database Info",
+      "back": "Back",
+      "notConnectionPlaceholder": "Please connect to a database server first",
+      "fields": {
+        "injectionPrimary": "Inject table info into template editor dependencies",
+        "injectionSecondary": "This operation will override existing dependencies"
+      }
+    }
+  },
+  "dependency": {
+    "noTableData": "No table data loaded, can not inject",
+    "title": "Dependencies"
+  },
+  "template": {
+    "default": {
+      "DDL": "DDL",
+      "database": "database/schema",
+      "table": "table",
+      "fields": "fields",
+      "fieldMap": "field map",
+      "presetFunctions": "preset functions"
+    },
+    "resetConfirm": "Are you sure you want to reset template to default?",
+    "loadFromFile": "Confirm to load file \"{{file.id}}\", and current editing content will lose",
+    "saveWithEmptyFileName": "Please provide a template file name",
+    "noReturnStatement": "No return statement found",
+    "editorNotInitializedYet": "Template editor has not been initialized yet",
+    "title": "Template",
+    "fileList": "Local Files",
+    "fileListDialog": {
+      "title": "Saved Template Files",
+      "close": "Close",
+      "reload": "Reload"
+    },
+    "fileNameDialog": {
+      "filename": "Filename",
+      "cancel": "Cancel",
+      "save": "Save"
+    },
+    "saveFileButton": "Save",
+    "saveFileToXXXButton": "Save to {{filename}}...",
+    "resetEditor": "Reset",
+    "generate": "Generator"
+  },
+  "outputResult": {
+    "emptyHistoryConfirm": "Are you sure you want to empty result history?",
+    "history": "History",
+    "resultLng": "Language Format",
+    "historyDialog": {
+      "title": "Generation Results History",
+      "close": "Close",
+      "clear": "Clear",
+      "noDataPlaceholder": "No Data"
+    },
+    "title": "Result"
+  }
+}
