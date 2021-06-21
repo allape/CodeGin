@@ -1,7 +1,7 @@
 import {Connection} from '../model/connection';
 import Database, {Field, Table} from '../model/database';
 import {Electron} from './electron';
-import {TemplateFile} from '../model/template-file';
+import {TemplateFile} from '../model/template';
 
 declare const electron: Electron;
 
@@ -164,4 +164,14 @@ export async function saveTplFile(name: string, content: string): Promise<boolea
   console.log('dev: should save', content, 'to', name);
   if (Math.random() * 100 < 30) return Promise.reject('获取文件失败');
   return new Promise(resolve => setTimeout(() => resolve(true), 1000));
+}
+
+/**
+ * 保存内容至文件
+ * @param filename 文件全路径
+ * @param content 文件内容
+ */
+export async function saveToFile(filename: string, content: string): Promise<boolean> {
+  if (production) return electron.saveToFile(filename, content);
+  return true;
 }

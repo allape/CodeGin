@@ -1,4 +1,4 @@
-import {TemplateFile} from '../model/template-file';
+import {TemplateFile} from '../model/template';
 import {List, ListItem, ListItemText, Typography} from '@material-ui/core';
 import LoadingContainer from '../component/loading/LoadingContainer';
 import DateString from '../component/date/DateString';

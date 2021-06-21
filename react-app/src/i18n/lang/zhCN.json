@@ -37,7 +37,6 @@
     "resetConfirm": "确定重置模板内容至默认模板?",
     "loadFromFile": "点击确定将加载{{file.id}}, 并且当前编辑的内容将会丢失",
     "saveWithEmptyFileName": "请输入文件名称",
-    "noReturnStatement": "没有找到return语句",
     "editorNotInitializedYet": "编辑器暂时未初始化完成",
     "title": "模板编辑器",
     "fileList": "模板文件列表",

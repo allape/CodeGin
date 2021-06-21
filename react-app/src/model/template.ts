@@ -14,6 +14,16 @@ export interface TemplateFile {
   updateTime: number;
 }
 
+/**
+ * 模板执行结果
+ */
+export interface TemplateResult {
+  // 结果
+  result: string;
+  // 文件名称
+  filename?: string;
+}
+
 // 默认的内容
 export const DEFAULT_TEMPLATE =
 `// 不要删除该import或添加其他的import语句, 执行模板的时候会替换掉第一句import, 这个仅仅是为了使用monaco editor的语法提示
@@ -69,4 +79,10 @@ public class \${TableName} extends BaseEntity {
 // \`;
 
 // 必须存在一个return语句, 因为模板执行方式是: (new Function(依赖 + 模板内容))()的返回值
-return tpl;`;
+return {
+  // 结果内容
+  result: tpl,
+  // 保存至的文件名称,
+  filename: \`\${TableName}Entity.java\`,
+  // filename: \`\${TableName}Controller.java\`,
+};`;

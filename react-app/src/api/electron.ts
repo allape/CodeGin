@@ -1,6 +1,6 @@
 import {Connection} from '../model/connection';
 import Database, {Field, Table} from '../model/database';
-import {TemplateFile} from '../model/template-file';
+import {TemplateFile} from '../model/template';
 
 export interface Electron {
   getConnectionInfo(conn: Connection): Promise<Database>;
@@ -9,4 +9,5 @@ export interface Electron {
   getFields(schemaName: string, table: string): Promise<Field[]>;
   getSavedTplFiles(): Promise<TemplateFile[]>;
   saveTplFile(name: string, content: string): Promise<boolean>;
+  saveToFile(filename: string, content: string): Promise<boolean>;
 }

@@ -194,6 +194,9 @@ app.whenReady().then(() => {
             e.reply(GetFieldsChannel, err);
         }
     });
+
+    // 保存生成的内容
+    const SaveToFileChannel = 'save-to-file';
 });
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit()
