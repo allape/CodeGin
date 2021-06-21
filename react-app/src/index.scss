@@ -35,6 +35,25 @@ body {
   }
 }
 
+.template-files-dialog {
+  padding: 0;
+  min-width: 500px;
+  .typo-with-right-button {
+    position: sticky;
+    top: 0;
+    left: 0;
+    padding: 20px;
+    background-color: #fff;
+    z-index: 1;
+    box-shadow: 0 -3px 10px 5px rgba(0, 0, 0, .1);
+  }
+  .template-file-name-with-input {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+}
+
 .MuiSelect-root {
   min-width: 100px;
   padding-left: 10px;

@@ -45,7 +45,10 @@
     "fileListDialog": {
       "title": "Saved Template Files",
       "close": "Close",
-      "reload": "Reload"
+      "reload": "Reload",
+      "confirm": "Export Results",
+      "filenamePlaceholder": "folder for output file",
+      "outputFolderIsEmpty": "{{file.id}}'s output folder is empty"
     },
     "fileNameDialog": {
       "filename": "Filename",

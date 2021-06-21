@@ -45,7 +45,10 @@
     "fileListDialog": {
       "title": "保存了的模板",
       "close": "关闭",
-      "reload": "刷新"
+      "reload": "刷新",
+      "confirm": "导出结果",
+      "filenamePlaceholder": "文件夹路径",
+      "outputFolderIsEmpty": "{{file.id}}的导出文件夹路径为空"
     },
     "fileNameDialog": {
       "filename": "文件名称",

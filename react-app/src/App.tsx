@@ -30,7 +30,7 @@ import {DEFAULT_TEMPLATE, define, run, TemplateFile} from './model/template';
 import DateString from './component/date/DateString';
 import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
-import TemplateFiles from './view/TemplateFiles';
+import TemplateFiles, {TemplateFileSelector} from './view/TemplateFiles';
 import {useCounter} from './component/loading/loading';
 import {PRESET_DEFINITIONS} from './model/definition';
 import useStorableState from './component/storable-state/storable-state';
@@ -155,6 +155,22 @@ export default function App() {
     database, table, fields, ddl,
     setEM,
   ]);
+
+  // region 直接解析模板并导出为结果文件
+
+  const [tplFileSelectorDialogOpen, setTFSelectorDO] = useState(true);
+  const openTFSelectorD = useCallback(() => {
+    setTFSelectorDO(true);
+  }, []);
+  const hideTFSelectorD = useCallback(() => {
+    setTFSelectorDO(false);
+  }, []);
+
+  const onFileSelectWithFilename = useCallback((files: TemplateFileSelector[]) => {
+    console.log(files);
+  }, []);
+
+  // endregion
 
   // endregion
 
@@ -508,23 +524,14 @@ export default function App() {
           </Grid>
         </Grid>
       </Grid>
-      <Dialog open={tplFilesDialogOpen} onClose={hideTFD}>
-        <Paper className="dialog-content-wrapper" style={{maxHeight: 500, minWidth: 300}}>
-          <div className="typo-with-right-button">
-            <Typography variant="h6" color="textPrimary">{t('template.fileListDialog.title')}</Typography>
-            <div className="buttons">
-              <Button variant={'contained'} color={'secondary'}
-                             onClick={hideTFD}>{t('template.fileListDialog.close')}</Button>
-              <LoadingButton loading={loading}
-                             variant={'contained'}
-                             onClick={reloadTplFiles}>{t('template.fileListDialog.reload')}</LoadingButton>
-            </div>
-          </div>
-          <TemplateFiles reloadKey={tplFilesReloadKey}
-                         onItemClick={loadTemplateFile}
-                         promiseHandler={promiseHandler} loading={loading}/>
-        </Paper>
-      </Dialog>
+
+      <TemplateFiles open={tplFilesDialogOpen}
+                     onClose={hideTFD}
+                     onItemClick={loadTemplateFile}/>
+      <TemplateFiles open={tplFileSelectorDialogOpen}
+                     onClose={hideTFSelectorD}
+                     onFileSelectWithFilename={onFileSelectWithFilename}/>
+
       <Dialog open={resultsDialogOpen} onClose={hideRsD}>
         <Paper className="dialog-content-wrapper" style={{maxHeight: 500, minWidth: 300}}>
           <div className="typo-with-right-button">
@@ -551,6 +558,7 @@ export default function App() {
           </div>
         </Paper>
       </Dialog>
+
       <Dialog className="dialog-form-wrapper" open={tplFileSaveDialogOpen} onClose={hideTplFileDialog}>
         <form className="dialog-form" onSubmit={onTplFileDialogSubmit}>
           <TextField name="tplFileName" label={t('template.fileNameDialog.filename')} defaultValue={tplFileName}
@@ -563,6 +571,7 @@ export default function App() {
           </div>
         </form>
       </Dialog>
+
     </div>
   );
 }
