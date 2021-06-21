@@ -197,6 +197,14 @@ app.whenReady().then(() => {
 
     // 保存生成的内容
     const SaveToFileChannel = 'save-to-file';
+    ipcMain.on(SaveToFileChannel, (e, args) => {
+        try {
+            fs.writeFileSync(args.filename, args.content);
+            e.returnValue = true;
+        } catch (err) {
+            e.returnValue = err;
+        }
+    });
 });
 app.on('window-all-closed', function () {
     if (process.platform !== 'darwin') app.quit()

@@ -34,6 +34,8 @@
       "fieldMap": "字段列表Map",
       "presetFunctions": "预设的方法"
     },
+    "noReturnStatement": "模板没有return语句",
+    "noResultContent": "模板没有返回有效的内容",
     "resetConfirm": "确定重置模板内容至默认模板?",
     "loadFromFile": "点击确定将加载{{file.id}}, 并且当前编辑的内容将会丢失",
     "saveWithEmptyFileName": "请输入文件名称",

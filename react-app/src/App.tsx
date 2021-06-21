@@ -26,7 +26,7 @@ import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import * as me from 'monaco-editor';
 import CodeEditor from './component/code-editor/CodeEditor';
-import {DEFAULT_TEMPLATE, TemplateFile, TemplateResult} from './model/template';
+import {DEFAULT_TEMPLATE, define, run, TemplateFile} from './model/template';
 import DateString from './component/date/DateString';
 import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
@@ -34,7 +34,7 @@ import TemplateFiles from './view/TemplateFiles';
 import {useCounter} from './component/loading/loading';
 import {PRESET_DEFINITIONS} from './model/definition';
 import useStorableState from './component/storable-state/storable-state';
-import {TFunction, useTranslation} from 'react-i18next';
+import {useTranslation} from 'react-i18next';
 
 // 保存连接信息的key
 const CONNECTION_STORAGE_KEY = 'connection_storage_key';
@@ -63,57 +63,6 @@ const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
 
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
-
-/**
- * 执行模板内容
- * @param definitions 预设内容
- * @param source 模板内容
- */
-const run = (definitions: string, source: string): TemplateResult => {
-  const sourceCode = `
-        ${definitions.replace(/(?<=\n) *((import.+?;)|export )/g, '')}
-        ${/*替换掉第一个import*/source.replace(/\s*(import.+?;)/, '')}
-      `;
-  console.log(sourceCode);
-  const result = new Function(sourceCode)() as TemplateResult;
-  if (result === undefined) {
-    throw new Error('no return statement');
-  } else if (!result.result) {
-    throw new Error('no result content');
-  }
-  return result;
-};
-
-/**
- * 生成数据库依赖内容
- * @param t i18n
- * @param database 数据库信息
- * @param table 表信息
- * @param fields 字段信息
- * @param ddl DDL
- */
-const define = (t: TFunction, database: Database, table: Table, fields: Field[], ddl: string): string => `
-// ${t('template.default.DDL')}
-${
-  /*ddl.split('\n').map(i => `// ${i}`).join('\n')*/
-  '// ' + ddl.replace(/\n/g, '\n// ')
-}
-
-// ${t('template.default.database')}
-export const database = ${JSON.stringify(database, undefined, 4)};
-
-// ${t('template.default.table')}
-export const table = ${JSON.stringify(table, undefined, 4)};
-
-// ${t('template.default.fields')}
-export const fields = ${JSON.stringify(fields, undefined, 4)};
-
-// ${t('template.default.fieldMap')}
-export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name as string]:c}), {}), undefined, 4)};
-
-// ${t('template.default.presetFunctions')}
-${PRESET_DEFINITIONS}
-`;
 
 export default function App() {
 
@@ -366,7 +315,7 @@ export default function App() {
   const printResult = useCallback(() => {
     if (tplEditor) {
       try {
-        const result = run(definitions, tplEditor.getValue());
+        const result = run(t, definitions, tplEditor.getValue());
         applyResult(result.result);
         setEM('');
         setTab(1);

@@ -34,6 +34,8 @@
       "fieldMap": "field map",
       "presetFunctions": "preset functions"
     },
+    "noReturnStatement": "No return statement",
+    "noResultContent": "Template has no valid content",
     "resetConfirm": "Are you sure you want to reset template to default?",
     "loadFromFile": "Confirm to load file \"{{file.id}}\", and current editing content will lose",
     "saveWithEmptyFileName": "Please provide a template file name",

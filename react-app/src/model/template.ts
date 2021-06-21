@@ -1,8 +1,10 @@
+import {DEFINITION_IMPORT, PRESET_DEFINITIONS} from './definition';
+import {TFunction} from 'react-i18next';
+import Database, {Field, Table} from './database';
+
 /**
  * 保存的模板文件
  */
-import {DEFINITION_IMPORT} from './definition';
-
 export interface TemplateFile {
   // 文件名称
   id: string;
@@ -86,3 +88,55 @@ return {
   filename: \`\${TableName}Entity.java\`,
   // filename: \`\${TableName}Controller.java\`,
 };`;
+
+/**
+ * 执行模板内容
+ * @param t i18n
+ * @param definitions 预设内容
+ * @param source 模板内容
+ */
+export const run = (t: TFunction, definitions: string, source: string): TemplateResult => {
+  const sourceCode = `
+        ${definitions.replace(/(?<=\n) *((import.+?;)|export )/g, '')}
+        ${/*替换掉第一个import*/source.replace(/\s*(import.+?;)/, '')}
+      `;
+  console.log(sourceCode);
+  const result = new Function(sourceCode)() as TemplateResult;
+  if (result === undefined) {
+    throw new Error(t('template.noReturnStatement'));
+  } else if (!result.result) {
+    throw new Error(t('template.noResultContent'));
+  }
+  return result;
+};
+
+/**
+ * 生成数据库依赖内容
+ * @param t i18n
+ * @param database 数据库信息
+ * @param table 表信息
+ * @param fields 字段信息
+ * @param ddl DDL
+ */
+export const define = (t: TFunction, database: Database, table: Table, fields: Field[], ddl: string): string => `
+// ${t('template.default.DDL')}
+${
+  /*ddl.split('\n').map(i => `// ${i}`).join('\n')*/
+  '// ' + ddl.replace(/\n/g, '\n// ')
+}
+
+// ${t('template.default.database')}
+export const database = ${JSON.stringify(database, undefined, 4)};
+
+// ${t('template.default.table')}
+export const table = ${JSON.stringify(table, undefined, 4)};
+
+// ${t('template.default.fields')}
+export const fields = ${JSON.stringify(fields, undefined, 4)};
+
+// ${t('template.default.fieldMap')}
+export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name as string]: c}), {}), undefined, 4)};
+
+// ${t('template.default.presetFunctions')}
+${PRESET_DEFINITIONS}
+`;
