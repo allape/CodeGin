@@ -31,7 +31,7 @@ import DateString from './component/date/DateString';
 import stringify from './component/date/date';
 import usePromiseHandler from './component/loading/promise-handler';
 import TemplateFiles, {TemplateFileSelector} from './view/TemplateFiles';
-import {useCounter} from './component/loading/loading';
+import {useCounter} from 'react-loading-state';
 import {PRESET_DEFINITIONS} from './model/definition';
 import useStorableState from './component/storable-state/storable-state';
 import {useTranslation} from 'react-i18next';

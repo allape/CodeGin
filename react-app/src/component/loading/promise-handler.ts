@@ -1,4 +1,4 @@
-import {LoadedFunction, LoadFunction, useLoading} from './loading';
+import useLoading, {LoadedFunction, LoadFunction} from 'react-loading-state';
 import {Dispatch, SetStateAction, useCallback, useState} from 'react';
 
 export type MessageHandlerFunction = (error: string | Error | any) => string;
