@@ -83,6 +83,7 @@ body {
       overflow: hidden;
     }
     .databases-wrapper {
+      height: calc(100vh - 20px - 140px - 20px - 20px - 20px - 1px);
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -108,7 +109,7 @@ body {
         text-overflow: ellipsis;
         overflow: hidden;
         display: -webkit-box;
-        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
       }
     }

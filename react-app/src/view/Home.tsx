@@ -1,6 +1,7 @@
 import React, {useCallback, useMemo, useState} from 'react';
 import {
-  Button, ButtonGroup,
+  Button,
+  ButtonGroup,
   Dialog,
   Divider,
   Grid,
@@ -84,11 +85,18 @@ export default function Home() {
 
   const onDisconnectButtonClick = useCallback(() => {
     setDatabase(undefined);
+    setSchema(undefined);
+    setTables(undefined);
+    setTable(undefined);
+    setDdl('');
+    setFields(undefined);
   }, []);
 
   const onDatabaseClick = useCallback((schema: Schema) => {
     setSchema(schema);
-    promiseHandler(getTables(schema.name!)).then(tables => setTables(tables));
+    promiseHandler(getTables(schema.name!)).then(tables => {
+      setTables(tables);
+    });
   }, [promiseHandler]);
 
   const onTableClick = useCallback((table: Table) => {
@@ -388,61 +396,67 @@ export default function Home() {
                 <div className="database-wrapper">
                   <Typography className="connection-name" color="textSecondary">{database.name}</Typography>
                   <Divider />
-                  <div className="databases-wrapper" style={{height: 'calc(100vh - 20px - 140px - 20px - 20px - 20px - 1px)'}}>
-                    {tables ?
-                      <>
-                        {fields ?
-                          <List component="nav">
-                            <ListItem button onClick={() => setFields(undefined)}>
-                              <ListItemText primary={
-                                <div className="text-with-icon">
-                                  <KeyboardBackspaceIcon className="icon"/>
-                                  <span>{t('connection.database.back')}</span>
-                                </div>
-                              } secondary={table?.name} />
-                            </ListItem>
-                            <ListItem button onClick={() => setEditorDefinitions()}>
-                              <ListItemText primary={t('connection.database.fields.injectionPrimary')}
-                                            secondary={t('connection.database.fields.injectionSecondary')} />
-                            </ListItem>
-                            <ListItem button onClick={() => openTFSelectorD()}>
-                              <ListItemText primary={t('connection.database.fields.export')} />
-                            </ListItem>
-                            {fields.map((field, index) =>
-                              <ListItem key={index} button>
-                                <ListItemText style={{paddingLeft: '20px'}}
-                                              primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`}
-                                              secondary={field.comment} />
-                              </ListItem>)}
-                          </List>
-                          :
-                          <List component="nav">
-                            <ListItem button onClick={() => setTables(undefined)}>
-                              <ListItemText primary={
-                                <div className="text-with-icon">
-                                  <KeyboardBackspaceIcon className="icon"/>
-                                  <span>{t('connection.database.back')}</span>
-                                </div>
-                              } />
-                            </ListItem>
-                            {tables.map((table, index) =>
-                              <ListItem key={index} button onClick={() => onTableClick(table)}>
-                                <ListItemText style={{paddingLeft: '20px'}}
-                                              primary={`${schema?.name}.${table.name}`}
-                                              secondary={table.comment} />
-                              </ListItem>)}
-                          </List>
-                        }
-                      </>
-                      :
-                      <List component="nav">
-                        {database.schemas.map((schema, index) =>
-                          <ListItem key={index} button
-                                    onClick={() => onDatabaseClick(schema)}>
-                            <ListItemText primary={schema.name} />
-                          </ListItem>)}
-                      </List>
-                    }
+                  <div style={!fields ? {display: 'none'} : {}} className="databases-wrapper">
+                    <List component="nav">
+                      <ListItem button onClick={() => setFields(undefined)}>
+                        <ListItemText primary={
+                          <div className="text-with-icon">
+                            <KeyboardBackspaceIcon className="icon"/>
+                            <span>{t('connection.database.back')}</span>
+                          </div>
+                        } secondary={table?.name} />
+                      </ListItem>
+                      <ListItem button onClick={() => setEditorDefinitions()}>
+                        <ListItemText primary={t('connection.database.fields.injectionPrimary')}
+                                      secondary={t('connection.database.fields.injectionSecondary')} />
+                      </ListItem>
+                      <ListItem button onClick={() => openTFSelectorD()}>
+                        <ListItemText primary={t('connection.database.fields.export')} />
+                      </ListItem>
+                      {fields ?
+                        fields.map((field, index) =>
+                          <ListItem key={index} button>
+                            <ListItemText style={{paddingLeft: '20px'}}
+                                          primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`}
+                                          secondary={field.comment} />
+                          </ListItem>
+                        )
+                        :
+                        <></>
+                      }
+                    </List>
+                  </div>
+                  <div style={!!fields || !tables ? {display: 'none'} : {}} className="databases-wrapper">
+                    <List component="nav">
+                      <ListItem button onClick={() => setTables(undefined)}>
+                        <ListItemText primary={
+                          <div className="text-with-icon">
+                            <KeyboardBackspaceIcon className="icon"/>
+                            <span>{t('connection.database.back')}</span>
+                          </div>
+                        } />
+                      </ListItem>
+                      {tables ?
+                        tables.map((table, index) =>
+                          <ListItem key={index} button onClick={() => onTableClick(table)}>
+                            <ListItemText style={{paddingLeft: '20px'}}
+                                          primary={`${schema?.name}.${table.name}`}
+                                          secondary={table.comment} />
+                          </ListItem>
+                        )
+                        :
+                        <></>
+                      }
+                    </List>
+                  </div>
+                  <div style={!!tables ? {display: 'none'} : {}} className="databases-wrapper">
+                    <List component="nav">
+                      {database.schemas.map((schema, index) =>
+                        <ListItem key={index} button
+                                  onClick={() => onDatabaseClick(schema)}>
+                          <ListItemText primary={schema.name} />
+                        </ListItem>)}
+                    </List>
                   </div>
                 </div>
                 :
