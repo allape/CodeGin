@@ -70,32 +70,41 @@ body {
 
 .code-generator-wrapper {
   padding: 10px 20px;
-  .MuiPaper-root {
-    padding: 20px;
-    &:not(:last-of-type) {
-      margin-bottom: 20px;
+  .database-wrapper {
+    .connection-name {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    .databases-wrapper {
+      overflow-y: auto;
+      overflow-x: hidden;
     }
   }
-
+  .MuiPaper-root {
+    padding: 10px;
+    &:not(:last-of-type) {
+      margin-bottom: 10px;
+    }
+  }
   .alert-wrapper {
     position: sticky;
     top: 0;
     left: 0;
     overflow: hidden;
     flex-wrap: nowrap;
+    height: 80px;
     .MuiAlert-message {
       max-width: calc(100% - 34px);
       white-space: pre-wrap;
       overflow-wrap: break-word;
-    }
-  }
-  .form-wrapper {
-    margin-top: 20px;
-    position: relative;
-    .form-buttons {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
+      .message-wrapper {
+        text-overflow: ellipsis;
+        overflow: hidden;
+        display: -webkit-box;
+        -webkit-line-clamp: 2; /* number of lines to show */
+        -webkit-box-orient: vertical;
+      }
     }
   }
   .text-with-icon {
@@ -108,5 +117,22 @@ body {
   }
   .editor-wrapper {
     padding: 20px 0;
+  }
+}
+
+.connect-form-wrapper {
+  padding-bottom: 5px;
+}
+.connect-form {
+  padding: 0 20px 20px;
+  margin-top: 20px;
+  position: relative;
+  .MuiTypography-root {
+    padding-bottom: 20px;
+  }
+  .form-buttons {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
   }
 }

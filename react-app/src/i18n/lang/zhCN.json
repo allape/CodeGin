@@ -11,6 +11,7 @@
     "username": "账号",
     "password": "密码",
     "connect": "连接",
+    "disconnect": "断开连接",
     "database": {
       "title": "数据库信息",
       "back": "返回",

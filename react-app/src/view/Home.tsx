@@ -48,6 +48,14 @@ export default function Home() {
 
   const [promiseHandler, loading, , , errorMessage, setEM] = usePromiseHandler(stringifyError);
 
+  const [errorMessageInDialogOpen, setErrMsgDO] = useState(false);
+  const openErrorMessageInDialog = useCallback(() => {
+    setErrMsgDO(true);
+  }, []);
+  const hideErrorMessageInDialog = useCallback(() => {
+    setErrMsgDO(false);
+  }, []);
+
   // 注入到编辑器的依赖内容
   const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS);
 
@@ -71,6 +79,10 @@ export default function Home() {
 
   const onConnectFormChange = useCallback((db?: Database) => {
     setDatabase(db);
+  }, []);
+
+  const onDisconnectButtonClick = useCallback(() => {
+    setDatabase(undefined);
   }, []);
 
   const onDatabaseClick = useCallback((schema: Schema) => {
@@ -343,19 +355,30 @@ export default function Home() {
     <div className="code-generator-wrapper">
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
-          <Alert className="alert-wrapper" severity={errorMessage ? 'error' : 'success'}>
+          <Alert className="alert-wrapper" severity={errorMessage ? 'error' : 'success'} onClick={openErrorMessageInDialog}>
             <AlertTitle>{t(errorMessage ? 'error.notOK' : 'error.ok')}</AlertTitle>
-            {errorMessage || t('error.okContent')}
+            <div className={'message-wrapper'}>
+              {errorMessage || t('error.okContent')}
+            </div>
+            <Dialog open={errorMessageInDialogOpen}
+                    onBackdropClick={hideErrorMessageInDialog} onClose={hideErrorMessageInDialog}>
+              <div style={{padding: '10px'}}>{errorMessage || t('error.okContent')}</div>
+            </Dialog>
           </Alert>
-          <ConnectForm promiseHandler={promiseHandler} loading={loading} onChange={onConnectFormChange}/>
-          <Paper className="paper-item">
-            <Typography variant="h6" color="textPrimary">{t('connection.database.title')}</Typography>
-            <LoadingContainer style={{padding: '5px'}} loading={loading}>
+          <Paper>
+            <div className="typo-with-right-button">
+              <Typography variant="h6" color="textPrimary">{t('connection.database.title')}</Typography>
+              <div className="buttons">
+                <ConnectForm promiseHandler={promiseHandler} loading={loading}
+                             onChange={onConnectFormChange} onDisconnect={onDisconnectButtonClick}/>
+              </div>
+            </div>
+            <LoadingContainer style={{padding: '0 5px 5px'}} loading={loading}>
               {database ?
-                <>
-                  <Typography color="textSecondary">{database.name}</Typography>
+                <div className="database-wrapper">
+                  <Typography className="connection-name" color="textSecondary">{database.name}</Typography>
                   <Divider />
-                  <div style={{maxHeight: 500, overflow: 'auto'}}>
+                  <div className="databases-wrapper" style={{height: 'calc(100vh - 20px - 140px - 20px - 20px - 20px - 1px)'}}>
                     {tables ?
                       <>
                         {fields ?
@@ -411,7 +434,7 @@ export default function Home() {
                       </List>
                     }
                   </div>
-                </>
+                </div>
                 :
                 <Typography color={'textSecondary'} align={'center'} style={{padding: '10px 0'}}>{t('connection.database.notConnectionPlaceholder')}</Typography>
               }
@@ -439,7 +462,8 @@ export default function Home() {
                   </div>
                 </div>
                 <div className="editor-wrapper">
-                  <CodeEditor onChange={onTplFileSave}
+                  <CodeEditor divProps={{style: {height: 'calc(100vh - 20px - 36px - 40px - 20px)'}}}
+                              onChange={onTplFileSave}
                               willMount={tplEditorWillMount}
                               didMount={tplEditorDidMount}/>
                 </div>

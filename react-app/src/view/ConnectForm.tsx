@@ -1,4 +1,4 @@
-import {Grid, Paper, TextField, Typography} from '@material-ui/core';
+import {Button, Dialog, Grid, Paper, TextField, Typography} from '@material-ui/core';
 import LoadingButton from '../component/loading/LoadingButton';
 import React, {FormEvent, useCallback, useState} from 'react';
 import {useTranslation} from 'react-i18next';
@@ -32,6 +32,7 @@ export interface ConnectFormProps {
   loading?: boolean;
   promiseHandler?: PromiseHandlerFunction;
   onChange?: (db?: Database) => void;
+  onDisconnect?: () => void;
 }
 
 export default function ConnectForm(props: ConnectFormProps) {
@@ -39,10 +40,11 @@ export default function ConnectForm(props: ConnectFormProps) {
     loading,
     promiseHandler,
     onChange,
+    onDisconnect,
   } = props;
 
   // 连接信息
-  const [, setConn] = useState<Connection>({});
+  const [conn, setConn] = useState<Connection | undefined>(undefined);
 
   const onConnectionInfoSubmit = useCallback((e: FormEvent) => {
     e.preventDefault();
@@ -80,33 +82,47 @@ export default function ConnectForm(props: ConnectFormProps) {
   // 连接信息表单错误信息
   const [errors, setErrors] = useState<Record<string, boolean>>({});
 
-  return <Paper>
-    <Typography variant="h6" color="textPrimary">{t('connection.title')}</Typography>
-    <form className={`form-wrapper`} onSubmit={onConnectionInfoSubmit}>
-      <Grid container spacing={2}>
-        <Grid item xs={8}>
-          <TextField required label={t('connection.host')} name={'host'} defaultValue={DEFAULT_VALUE.host}
-                     error={errors.host} helperText={'Host is required'} />
-        </Grid>
-        <Grid item xs={4}>
-          <TextField required type={'number'} label={t('connection.port')} name={'port'}
-                     defaultValue={DEFAULT_VALUE.port!.toString()}
-                     error={errors.port} helperText={'Port is required'} />
-        </Grid>
-        <Grid item xs={6}>
-          <TextField label={t('connection.username')} name={'username'} defaultValue={DEFAULT_VALUE.username} />
-        </Grid>
-        <Grid item xs={6}>
-          <TextField label={t('connection.password')} name={'password'} defaultValue={DEFAULT_VALUE.password} />
-        </Grid>
-        <Grid item xs={12}>
-          <div className="form-buttons">
-            <LoadingButton loading={loading}
-                           variant="contained" color="primary"
-                           type={'submit'}>{t('connection.connect')}</LoadingButton>
-          </div>
-        </Grid>
-      </Grid>
-    </form>
-  </Paper>;
+  // 断开连接按钮点击时
+  const onDisconnectProxy = useCallback(() => {
+    setConn(undefined);
+    if (onDisconnect) {
+      onDisconnect();
+    }
+  }, [onDisconnect]);
+
+  return <div className={'connect-form-wrapper'}>
+    <Dialog open={!conn}>
+      <Paper className={`connect-form`}>
+        <Typography variant="h6" color="textPrimary">{t('connection.title')}</Typography>
+        <form onSubmit={onConnectionInfoSubmit}>
+          <Grid container spacing={2}>
+            <Grid item xs={8}>
+              <TextField required label={t('connection.host')} name={'host'} defaultValue={DEFAULT_VALUE.host}
+                         error={errors.host} helperText={'Host is required'} />
+            </Grid>
+            <Grid item xs={4}>
+              <TextField required type={'number'} label={t('connection.port')} name={'port'}
+                         defaultValue={DEFAULT_VALUE.port!.toString()}
+                         error={errors.port} helperText={'Port is required'} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField label={t('connection.username')} name={'username'} defaultValue={DEFAULT_VALUE.username} />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField label={t('connection.password')} name={'password'} defaultValue={DEFAULT_VALUE.password} />
+            </Grid>
+            <Grid item xs={12}>
+              <div className="form-buttons">
+                <LoadingButton loading={loading}
+                               variant="contained" color="primary"
+                               type={'submit'}>{t('connection.connect')}</LoadingButton>
+              </div>
+            </Grid>
+          </Grid>
+        </form>
+      </Paper>
+    </Dialog>
+    <Button style={{opacity: conn ? 1 : 0}} variant="contained" color="secondary"
+            onClick={onDisconnectProxy}>{t('connection.disconnect')}</Button>
+  </div>;
 }

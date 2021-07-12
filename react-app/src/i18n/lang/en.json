@@ -11,6 +11,7 @@
     "username": "Username",
     "password": "Password",
     "connect": "Connect",
+    "disconnect": "Disconnect",
     "database": {
       "title": "Database Info",
       "back": "Back",
