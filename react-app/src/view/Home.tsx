@@ -287,10 +287,10 @@ export default function Home() {
     setTplFileName(file.id);
     hideTFD();
     if (autoGenerate) {
-      triggerSavedFileSelected();
+      triggerSavedFileSelected(1);
     }
     // }
-  }, [t, tplEditor, hideTFD, autoGenerate, triggerSavedFileSelected]);
+  }, [tplEditor, hideTFD, autoGenerate, triggerSavedFileSelected]);
 
   // endregion
 
@@ -444,9 +444,10 @@ export default function Home() {
 
   useEffect(() => {
     if (onSavedFileSelected > 0) {
+      triggerSavedFileSelected(0);
       printResult();
     }
-  }, [printResult, onSavedFileSelected]);
+  }, [printResult, onSavedFileSelected, triggerSavedFileSelected]);
 
   return (
     <div className="code-generator-wrapper">

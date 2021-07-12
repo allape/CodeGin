@@ -9761,10 +9761,10 @@ react-is@^16.7.0, react-is@^16.8.1:
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-17.0.2.tgz#e691d4a8e9c789365655539ab372762b0efb54f0"
   integrity sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w==
 
-react-loading-state@^0.9.4:
-  version "0.9.4"
-  resolved "https://registry.yarnpkg.com/react-loading-state/-/react-loading-state-0.9.4.tgz#ffd5f98949f05cd3e2192568dee6b1f7c2fedcac"
-  integrity sha512-pytB7s/yC/3nm+0eK3/DRlwxxSsgItVcHfwXumWB4zEDhOzllcmebAYSfdUkJ3tTF/pTcxLvCkAECQ5xehgVpw==
+react-loading-state@^0.9.6:
+  version "0.9.6"
+  resolved "https://registry.yarnpkg.com/react-loading-state/-/react-loading-state-0.9.6.tgz#22cd889f697fd1f7f7e07fd9121d5e40eb029daa"
+  integrity sha512-z/tWoW6q7vpmvSxcUoL9XgTZEsisSs8WYE5DPoq3ecwt94gjDW1huOLwjeqpw1ZTsz4sluzaiI0pikKyw5t7ig==
 
 react-refresh@^0.8.3:
   version "0.8.3"
