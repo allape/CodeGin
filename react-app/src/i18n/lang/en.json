@@ -65,6 +65,7 @@
   "outputResult": {
     "emptyHistoryConfirm": "Are you sure you want to empty result history?",
     "history": "History",
+    "close": "Close",
     "resultLng": "Language Format",
     "historyDialog": {
       "title": "Generation Results History",

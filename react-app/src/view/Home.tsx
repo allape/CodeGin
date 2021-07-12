@@ -1,6 +1,6 @@
 import React, {useCallback, useMemo, useState} from 'react';
 import {
-  Button,
+  Button, ButtonGroup,
   Dialog,
   Divider,
   Grid,
@@ -34,6 +34,7 @@ import {PRESET_DEFINITIONS} from '../model/definition';
 import useStorableState from '../component/storable-state/storable-state';
 import {useTranslation} from 'react-i18next';
 import ConnectForm from './ConnectForm';
+import ListIcon from '@material-ui/icons/List';
 
 // 保存了的结果语言类型
 const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
@@ -268,6 +269,14 @@ export default function Home() {
 
   // region 依赖内容和模板结果
 
+  const [resultAndDepsDialogOpen, setRADDO] = useState(false);
+  const openRADD = useCallback(() => {
+    setRADDO(true);
+  } ,[]);
+  const hideRADD = useCallback(() => {
+    setRADDO(false);
+  } ,[]);
+
   const [resultReloadKey, reloadResultEditor] = useCounter();
   const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
   const [result, setResult] = useState('');
@@ -326,15 +335,16 @@ export default function Home() {
           createTime: Date.now(),
           updateTime: Date.now(),
         }, ...olds]);
+        openRADD();
       } catch (e) {
         setEM(stringifyError(e));
       }
     } else {
       setEM(t('template.editorNotInitializedYet'));
     }
-  }, [t, definitions, tplEditor, table, applyResult, setEM]);
+  }, [t, definitions, tplEditor, table, applyResult, setEM, openRADD]);
 
-  // region  输出模板日志
+  // region 输出模板日志
 
   const [resultsDialogOpen, setRDO] = useState(false);
   const openRsD = useCallback(() => setRDO(true), []);
@@ -458,7 +468,10 @@ export default function Home() {
                       }
                     </LoadingButton>
                     <Button variant={'outlined'} onClick={resetTplEditor}>{t('template.resetEditor')}</Button>
-                    <Button variant={'contained'} color={'primary'} onClick={printResult}>{t('template.generate')}</Button>
+                    <ButtonGroup color="primary">
+                      <Button onClick={printResult}>{t('template.generate')}</Button>
+                      <Button onClick={openRADD}><ListIcon/></Button>
+                    </ButtonGroup>
                   </div>
                 </div>
                 <div className="editor-wrapper">
@@ -469,36 +482,42 @@ export default function Home() {
                 </div>
               </Paper>
             </Grid>
-            <Grid item xs={12} lg={12}>
-              <Paper style={{paddingTop: '8px'}}>
-                <div className="typo-with-right-button">
-                  <Tabs value={tab} onChange={handleTabChange}>
-                    <Tab label={t('dependency.title')} />
-                    <Tab label={t('outputResult.title')} />
-                  </Tabs>
-                  <div className="buttons">
-                    <Button variant={'outlined'} onClick={openRsD}>{t('outputResult.history')}</Button>
-                    <Tooltip title={t('outputResult.resultLng').toString()}>
-                      <Select value={resultType} onChange={onResultTypeChange}>
-                        {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
-                      </Select>
-                    </Tooltip>
-                  </div>
-                </div>
-                <div className="editor-wrapper">
-                  {tab === 0 ? <>
-                    <CodeEditor value={definitions} options={depEditorOptions}/>
-                  </> : <></>}
-                  {tab === 1 ? <>
-                    <CodeEditor options={resultEditorOptions}
-                                didMount={resultEditorDidMount}/>
-                  </> : <></>}
-                </div>
-              </Paper>
-            </Grid>
           </Grid>
         </Grid>
       </Grid>
+
+      <Dialog open={resultAndDepsDialogOpen} maxWidth={'xl'} fullWidth onClose={hideRADD}>
+        <Paper>
+          <div className="typo-with-right-button" style={{paddingRight: '10px'}}>
+            <Tabs value={tab} onChange={handleTabChange}>
+              <Tab label={t('dependency.title')} />
+              <Tab label={t('outputResult.title')} />
+            </Tabs>
+            <div className="buttons">
+              <span style={tab === 1 ? {paddingRight: '20px'} : { display: 'none' }}>
+                <Button variant={'outlined'} onClick={openRsD}>{t('outputResult.history')}</Button>
+                <Tooltip title={t('outputResult.resultLng').toString()}>
+                  <Select value={resultType} style={{minWidth: '120px'}} onChange={onResultTypeChange}>
+                    {LANGUAGES.map(language => <MenuItem value={language} key={language}>{language}</MenuItem>)}
+                  </Select>
+                </Tooltip>
+              </span>
+              <Button variant={'contained'} color={'secondary'} onClick={hideRADD}>{t('outputResult.close')}</Button>
+            </div>
+          </div>
+          <div className="editor-wrapper" style={{ height: 'calc(100vh - 64px - 48px - 20px)'}}>
+            <div style={tab === 0 ? { height: 'calc(100% - 22px)' } : { display: 'none' }}>
+              <CodeEditor divProps={{style: {height: '100%'}}}
+                          value={definitions} options={depEditorOptions}/>
+            </div>
+            <div style={tab === 1 ? { height: 'calc(100% - 22px)' } : { display: 'none' }}>
+              <CodeEditor divProps={{style: {height: '100%'}}}
+                          options={resultEditorOptions}
+                          didMount={resultEditorDidMount}/>
+            </div>
+          </div>
+        </Paper>
+      </Dialog>
 
       <TemplateFiles open={tplFilesDialogOpen}
                      onClose={hideTFD}
