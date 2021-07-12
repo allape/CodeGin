@@ -1,5 +1,4 @@
-import React, {FormEvent, useCallback, useMemo, useState} from 'react';
-import './App.scss';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   Button,
   Dialog,
@@ -17,45 +16,24 @@ import {
   Tooltip,
   Typography
 } from "@material-ui/core";
-import {Connection} from './model/connection';
-import Database, {Field, Schema, Table} from './model/database';
-import {connect, getFields, getTableDDL, getTables, saveToFile, saveTplFile, stringifyError} from './api/api';
-import LoadingButton from './component/loading/LoadingButton';
-import LoadingContainer from './component/loading/LoadingContainer';
+import Database, {Field, Schema, Table} from '../model/database';
+import {getFields, getTableDDL, getTables, saveToFile, saveTplFile, stringifyError} from '../api/api';
+import LoadingButton from '../component/loading/LoadingButton';
+import LoadingContainer from '../component/loading/LoadingContainer';
 import {Alert, AlertTitle} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import * as me from 'monaco-editor';
-import CodeEditor from './component/code-editor/CodeEditor';
-import {DEFAULT_TEMPLATE, define, run, TemplateFile} from './model/template';
-import DateString from './component/date/DateString';
-import stringify from './component/date/date';
-import usePromiseHandler from './component/loading/promise-handler';
-import TemplateFiles, {TemplateFileSelector} from './view/TemplateFiles';
+import CodeEditor from '../component/code-editor/CodeEditor';
+import {DEFAULT_TEMPLATE, define, run, TemplateFile} from '../model/template';
+import DateString from '../component/date/DateString';
+import stringify from '../component/date/date';
+import usePromiseHandler from '../component/loading/promise-handler';
+import TemplateFiles, {TemplateFileSelector} from './TemplateFiles';
 import {useCounter} from 'react-loading-state';
-import {PRESET_DEFINITIONS} from './model/definition';
-import useStorableState from './component/storable-state/storable-state';
+import {PRESET_DEFINITIONS} from '../model/definition';
+import useStorableState from '../component/storable-state/storable-state';
 import {useTranslation} from 'react-i18next';
-
-// 保存连接信息的key
-const CONNECTION_STORAGE_KEY = 'connection_storage_key';
-// 默认回填的数据
-const DEFAULT_VALUE: Connection = (() => {
-  try {
-    const fromCache = window.localStorage.getItem(CONNECTION_STORAGE_KEY);
-    if (fromCache) {
-      const result = JSON.parse(fromCache);
-      if (result) return result;
-    }
-  } catch (e) {
-    console.error('error occurred while parsing stored connection info:', e);
-  }
-  return {
-    host: 'localhost',
-    port: 3306,
-    username: 'root',
-    password: undefined,
-  };
-})();
+import ConnectForm from './ConnectForm';
 
 // 保存了的结果语言类型
 const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
@@ -64,7 +42,7 @@ const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
 
-export default function App() {
+export default function Home() {
 
   const { t } = useTranslation();
 
@@ -78,11 +56,6 @@ export default function App() {
 
   // region 数据库
 
-  // 连接信息表单错误信息
-  const [errors, setErrors] = useState<Record<string, boolean>>({});
-
-  // 连接信息
-  const [, setConn] = useState<Connection>({});
   // 连接了的数据库信息
   const [database, setDatabase] = useState<Database | undefined>(undefined);
   // 当前选中的schema
@@ -96,34 +69,9 @@ export default function App() {
   // fields列表
   const [fields, setFields] = useState<Field[] | undefined>(undefined);
 
-  const onConnectionInfoSubmit = useCallback((e: FormEvent) => {
-    e.preventDefault();
-
-    const target: any = e.target;
-    const data: Connection = Object.keys(DEFAULT_VALUE).reduce((p, c) => ({ ...p, [c]: target[c]?.value }), {});
-
-    const newErrors: Record<string, boolean> = {};
-
-    if (!data.host) {
-      newErrors.host = true;
-    } else if (!data.port) {
-      newErrors.port = true;
-    }
-
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length) {
-      return;
-    }
-
-    setConn(data);
-    window.localStorage.setItem(CONNECTION_STORAGE_KEY, JSON.stringify(data));
-
-    setDatabase(undefined);
-    promiseHandler(connect(data)).then(db => {
-      setDatabase(db);
-    });
-  }, [promiseHandler]);
+  const onConnectFormChange = useCallback((db?: Database) => {
+    setDatabase(db);
+  }, []);
 
   const onDatabaseClick = useCallback((schema: Schema) => {
     setSchema(schema);
@@ -399,35 +347,7 @@ export default function App() {
             <AlertTitle>{t(errorMessage ? 'error.notOK' : 'error.ok')}</AlertTitle>
             {errorMessage || t('error.okContent')}
           </Alert>
-          <Paper>
-            <Typography variant="h6" color="textPrimary">{t('connection.title')}</Typography>
-            <form className={`form-wrapper`} onSubmit={onConnectionInfoSubmit}>
-              <Grid container spacing={2}>
-                <Grid item xs={8}>
-                  <TextField required label={t('connection.host')} name={'host'} defaultValue={DEFAULT_VALUE.host}
-                             error={errors.host} helperText={'Host is required'} />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField required type={'number'} label={t('connection.port')} name={'port'}
-                             defaultValue={DEFAULT_VALUE.port!.toString()}
-                             error={errors.port} helperText={'Port is required'} />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField label={t('connection.username')} name={'username'} defaultValue={DEFAULT_VALUE.username} />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField label={t('connection.password')} name={'password'} defaultValue={DEFAULT_VALUE.password} />
-                </Grid>
-                <Grid item xs={12}>
-                  <div className="form-buttons">
-                    <LoadingButton loading={loading}
-                                   variant="contained" color="primary"
-                                   type={'submit'}>{t('connection.connect')}</LoadingButton>
-                  </div>
-                </Grid>
-              </Grid>
-            </form>
-          </Paper>
+          <ConnectForm promiseHandler={promiseHandler} loading={loading} onChange={onConnectFormChange}/>
           <Paper className="paper-item">
             <Typography variant="h6" color="textPrimary">{t('connection.database.title')}</Typography>
             <LoadingContainer style={{padding: '5px'}} loading={loading}>
