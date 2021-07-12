@@ -122,7 +122,7 @@ export const define = (t: TFunction, database: Database, table: Table, fields: F
 // ${t('template.default.DDL')}
 ${
   /*ddl.split('\n').map(i => `// ${i}`).join('\n')*/
-  '// ' + ddl.replace(/\n/g, '\n// ')
+  '// ' + (ddl || '').replace(/\n/g, '\n// ')
 }
 
 // ${t('template.default.database')}

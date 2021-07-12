@@ -5,7 +5,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #f5f5f5;overflow: hidden;
+  background-color: #f5f5f5;
+  overflow-x: hidden;
 }
 
 .typo-with-right-button {
@@ -20,7 +21,7 @@ body {
   }
   .buttons {
     button {
-      margin: 0 5px;
+      margin: 0 5px 5px;
     }
     .MuiButtonGroup-root {
       margin: 0 5px;
@@ -75,7 +76,7 @@ body {
 }
 
 .code-generator-wrapper {
-  padding: 10px 20px;
+  padding: 5px 5px;
   .database-wrapper {
     .connection-name {
       white-space: nowrap;
@@ -83,7 +84,7 @@ body {
       overflow: hidden;
     }
     .databases-wrapper {
-      height: calc(100vh - 20px - 140px - 20px - 20px - 20px - 1px);
+      height: calc(100vh - 20px - 140px - 15px - 20px - 20px - 1px);
       overflow-y: auto;
       overflow-x: hidden;
     }
@@ -127,9 +128,6 @@ body {
   }
 }
 
-.connect-form-wrapper {
-  padding-bottom: 5px;
-}
 .connect-form {
   padding: 0 20px 20px;
   margin-top: 20px;

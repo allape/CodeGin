@@ -1,4 +1,4 @@
-import React, {useCallback, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   Button,
   ButtonGroup,
@@ -21,7 +21,7 @@ import Database, {Field, Schema, Table} from '../model/database';
 import {getFields, getTableDDL, getTables, saveToFile, saveTplFile, stringifyError} from '../api/api';
 import LoadingButton from '../component/loading/LoadingButton';
 import LoadingContainer from '../component/loading/LoadingContainer';
-import {Alert, AlertTitle} from '@material-ui/lab';
+import {Alert} from '@material-ui/lab';
 import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
 import * as me from 'monaco-editor';
 import CodeEditor from '../component/code-editor/CodeEditor';
@@ -37,9 +37,13 @@ import {useTranslation} from 'react-i18next';
 import ConnectForm from './ConnectForm';
 import ListIcon from '@material-ui/icons/List';
 
-// 保存了的结果语言类型
+// 默认结果语言类型
 const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
+// 保存了的结果语言类型
 const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
+
+// 上一次进行输出结果的内容的key
+const LAST_TPL_STORAGE_KEY = 'last_tpl_storage_key';
 
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
@@ -48,7 +52,22 @@ export default function Home() {
 
   const { t } = useTranslation();
 
-  const [promiseHandler, loading, , , errorMessage, setEM] = usePromiseHandler(stringifyError);
+  const defaultOkMessage = t('error.okContent');
+
+  const [error, setError] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const [promiseHandler, loading, , , errorMessage] = usePromiseHandler(stringifyError);
+
+  useEffect(() => {
+    if (errorMessage) {
+      setMessage(errorMessage);
+      setError(true);
+    } else {
+      setMessage(defaultOkMessage);
+      setError(false);
+    }
+  }, [errorMessage, defaultOkMessage]);
 
   const [errorMessageInDialogOpen, setErrMsgDO] = useState(false);
   const openErrorMessageInDialog = useCallback(() => {
@@ -95,6 +114,29 @@ export default function Home() {
     setFields(undefined);
   }, []);
 
+  // 将当前显示字段的表的数据导入编辑器依赖
+  const setEditorDefinitions = useCallback(() => {
+    if (!fields) {
+      setMessage(t('dependency.noTableData'));
+      setError(true);
+      return;
+    } else {
+      setMessage(t('dependency.injectOk'));
+      setError(false);
+    }
+
+    setDefinitions(define(t, database!, table!, fields, ddl));
+    setTab(0);
+  }, [
+    t,
+    database, table, fields, ddl,
+  ]);
+  useEffect(() => {
+    if (fields) {
+      setEditorDefinitions();
+    }
+  }, [fields, setEditorDefinitions]);
+
   const onDatabaseClick = useCallback((schema: Schema) => {
     setSchema(schema);
     setTableNameKeywords('');
@@ -114,21 +156,6 @@ export default function Home() {
     });
   }, [schema, promiseHandler]);
 
-  // 将当前显示字段的表的数据导入编辑器依赖
-  const setEditorDefinitions = useCallback(() => {
-    if (!fields) {
-      setEM(t('dependency.noTableData'));
-      return;
-    }
-
-    setDefinitions(define(t, database!, table!, fields, ddl));
-    setTab(0);
-  }, [
-    t,
-    database, table, fields, ddl,
-    setEM,
-  ]);
-
   // region 直接解析模板并导出为结果文件
 
   const [tplFileSelectorDialogOpen, setTFSelectorDO] = useState(false);
@@ -141,8 +168,12 @@ export default function Home() {
 
   const onFileSelectWithFilename = useCallback((files: TemplateFileSelector[]) => {
     if (!fields) {
-      setEM(t('dependency.noTableData'));
+      setMessage(t('dependency.noTableData'));
+      setError(true);
       return;
+    } else {
+      setMessage(defaultOkMessage);
+      setError(false);
     }
     // 获取依赖
     const definition = define(t, database!, table!, fields, ddl);
@@ -151,21 +182,24 @@ export default function Home() {
       for (const file of files) {
         const result = run(t, definition, file.content);
         if (!result.filename) {
-          setEM(t('outputResult.hasNoFilename', { file }));
+          setMessage(t('outputResult.hasNoFilename', { file }));
+          setError(true);
           return;
         }
         promiseHandler(saveToFile(file.__filename!, result.filename, result.result)).then(() => {
           hideTFSelectorD();
+          setMessage(defaultOkMessage);
+          setError(false);
         });
       }
       alert(t('outputResult.exportSuccess'));
     } catch (e) {
-      setEM(stringifyError(e));
+      setMessage(stringifyError(e));
+      setError(true);
     }
   }, [
-    t,
+    t, defaultOkMessage,
     database, table, fields, ddl,
-    setEM,
     promiseHandler, hideTFSelectorD,
   ]);
 
@@ -199,7 +233,7 @@ export default function Home() {
         definitions,
         'file:///node_modules/code-gin/index.js'
       );
-      const content = tplEditor?.getValue() || DEFAULT_TEMPLATE;
+      const content = tplEditor?.getValue() || localStorage.getItem(LAST_TPL_STORAGE_KEY) || DEFAULT_TEMPLATE;
       console.log(content);
       const model = me.editor.createModel(
         content,
@@ -351,9 +385,11 @@ export default function Home() {
   const printResult = useCallback(() => {
     if (tplEditor) {
       try {
-        const result = run(t, definitions, tplEditor.getValue());
+        const tpl = tplEditor.getValue();
+        const result = run(t, definitions, tpl);
         applyResult(result.result);
-        setEM('');
+        setMessage('');
+        setError(false);
         setTab(1);
 
         // 添加历史记录
@@ -363,14 +399,24 @@ export default function Home() {
           createTime: Date.now(),
           updateTime: Date.now(),
         }, ...olds]);
+        localStorage.setItem(LAST_TPL_STORAGE_KEY, tpl);
         openRADD();
+        setMessage(defaultOkMessage);
+        setError(false);
       } catch (e) {
-        setEM(stringifyError(e));
+        setMessage(stringifyError(e));
+        setError(true);
       }
     } else {
-      setEM(t('template.editorNotInitializedYet'));
+      setMessage(t('template.editorNotInitializedYet'));
+      setError(true);
     }
-  }, [t, definitions, tplEditor, table, applyResult, setEM, openRADD]);
+  }, [
+    t, defaultOkMessage,
+    definitions, tplEditor,
+    table, applyResult,
+    openRADD,
+  ]);
 
   // endregion
 
@@ -378,11 +424,8 @@ export default function Home() {
     <div className="code-generator-wrapper">
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
-          <Alert className="alert-wrapper" severity={errorMessage ? 'error' : 'success'} onClick={openErrorMessageInDialog}>
-            <AlertTitle>{t(errorMessage ? 'error.notOK' : 'error.ok')}</AlertTitle>
-            <div className={'message-wrapper'}>
-              {errorMessage || t('error.okContent')}
-            </div>
+          <Alert className="alert-wrapper" severity={error ? 'error' : 'success'} onClick={openErrorMessageInDialog}>
+            <div className={'message-wrapper'}>{message}</div>
             <Dialog open={errorMessageInDialogOpen}
                     onBackdropClick={hideErrorMessageInDialog} onClose={hideErrorMessageInDialog}>
               <div style={{padding: '10px'}}>{errorMessage || t('error.okContent')}</div>

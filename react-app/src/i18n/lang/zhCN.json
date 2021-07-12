@@ -30,7 +30,8 @@
   },
   "dependency": {
     "noTableData": "当前未加载任何Table, 无法导入依赖!",
-    "title": "依赖"
+    "title": "依赖",
+    "injectOk": "成功注入依赖"
   },
   "template": {
     "default": {

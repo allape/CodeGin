@@ -30,7 +30,8 @@
   },
   "dependency": {
     "noTableData": "No table data loaded, can not inject",
-    "title": "Dependencies"
+    "title": "Dependencies",
+    "injectOk": "Dependencies loaded"
   },
   "template": {
     "default": {
