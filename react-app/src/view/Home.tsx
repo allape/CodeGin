@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   Button,
-  ButtonGroup,
+  ButtonGroup, Checkbox,
   Dialog,
   Divider,
   Grid,
@@ -44,6 +44,9 @@ const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
 
 // 上一次进行输出结果的内容的key
 const LAST_TPL_STORAGE_KEY = 'last_tpl_storage_key';
+
+// 自动输出结果的checkbox的选中值的key
+const AUTO_PRINT_STORAGE_KEY = 'auto_print_storage_key';
 
 // 结果内容支持语法高亮的语言
 const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
@@ -256,19 +259,38 @@ export default function Home() {
     setTplEditor(editor);
   }, []);
 
+  // region 自动输出结果
+
+  const [autoGenerate, setAutoGenerate] = useState(!!localStorage.getItem(AUTO_PRINT_STORAGE_KEY));
+  const setAutoGenerateProxy = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const checked = e.target.checked;
+    setAutoGenerate(checked);
+    if (checked) {
+      localStorage.setItem(AUTO_PRINT_STORAGE_KEY, `${Date.now()}`);
+    } else {
+      localStorage.removeItem(AUTO_PRINT_STORAGE_KEY);
+    }
+  }, []);
+
+  // endregion
+
   // region 模板文件列表
 
+  const [onSavedFileSelected, triggerSavedFileSelected] = useCounter();
   const [tplFilesDialogOpen, setTFDO] = useState(false);
   const openTFD = useCallback(() => setTFDO(true), []);
   const hideTFD = useCallback(() => setTFDO(false), []);
 
   const loadTemplateFile = useCallback((file: TemplateFile) => {
-    if (window.confirm(t('template.loadFromFile', { file }))) {
-      tplEditor?.setValue(file.content);
-      setTplFileName(file.id);
-      hideTFD();
+    // if (window.confirm(t('template.loadFromFile', { file }))) {
+    tplEditor?.setValue(file.content);
+    setTplFileName(file.id);
+    hideTFD();
+    if (autoGenerate) {
+      triggerSavedFileSelected();
     }
-  }, [t, tplEditor, hideTFD]);
+    // }
+  }, [t, tplEditor, hideTFD, autoGenerate, triggerSavedFileSelected]);
 
   // endregion
 
@@ -420,6 +442,12 @@ export default function Home() {
 
   // endregion
 
+  useEffect(() => {
+    if (onSavedFileSelected > 0) {
+      printResult();
+    }
+  }, [printResult, onSavedFileSelected]);
+
   return (
     <div className="code-generator-wrapper">
       <Grid container spacing={2}>
@@ -454,10 +482,10 @@ export default function Home() {
                           </div>
                         } secondary={table?.name} />
                       </ListItem>
-                      <ListItem button onClick={() => setEditorDefinitions()}>
+                      {/*<ListItem button onClick={() => setEditorDefinitions()}>
                         <ListItemText primary={t('connection.database.fields.injectionPrimary')}
                                       secondary={t('connection.database.fields.injectionSecondary')} />
-                      </ListItem>
+                      </ListItem>*/}
                       <ListItem button onClick={() => openTFSelectorD()}>
                         <ListItemText primary={t('connection.database.fields.export')} />
                       </ListItem>
@@ -525,6 +553,9 @@ export default function Home() {
                 <div className="typo-with-right-button">
                   <Typography className="typo" variant="h6" color="textPrimary">{t('template.title')}(javascript) {tplFileName}</Typography>
                   <div className="buttons">
+                    <Tooltip title={t('template.autoGenerate').toString()}>
+                      <Checkbox checked={autoGenerate} onChange={setAutoGenerateProxy} />
+                    </Tooltip>
                     <Button variant={'outlined'} onClick={openTFD}>{t('template.fileList')}</Button>
                     <LoadingButton variant={'contained'} color={'primary'}
                                    loading={loading}

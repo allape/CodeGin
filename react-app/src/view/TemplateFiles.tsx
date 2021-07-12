@@ -118,7 +118,9 @@ export default function TemplateFiles(props: TemplateFilesProps) {
   }, [t, templateFiles, onFileSelectWithFilename]);
 
   useEffect(() => {
-    getTemplateFiles();
+    if (open) {
+      getTemplateFiles();
+    }
   }, [getTemplateFiles, open]);
 
   return<Dialog open={!!open} onClose={onClose}>

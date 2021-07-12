@@ -66,7 +66,8 @@
     "saveFileButton": "保存",
     "saveFileToXXXButton": "保存至{{filename}}...",
     "resetEditor": "重置",
-    "generate": "生成结果"
+    "generate": "生成结果",
+    "autoGenerate": "自动生成结果"
   },
   "outputResult": {
     "emptyHistoryConfirm": "确定清空输出历史?",
