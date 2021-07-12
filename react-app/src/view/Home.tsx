@@ -79,6 +79,9 @@ export default function Home() {
   // fields列表
   const [fields, setFields] = useState<Field[] | undefined>(undefined);
 
+  // table名字搜索
+  const [tableNameKeywords, setTableNameKeywords] = useState('');
+
   const onConnectFormChange = useCallback((db?: Database) => {
     setDatabase(db);
   }, []);
@@ -94,6 +97,7 @@ export default function Home() {
 
   const onDatabaseClick = useCallback((schema: Schema) => {
     setSchema(schema);
+    setTableNameKeywords('');
     promiseHandler(getTables(schema.name!)).then(tables => {
       setTables(tables);
     });
@@ -277,6 +281,21 @@ export default function Home() {
 
   // region 依赖内容和模板结果
 
+  // region 输出模板日志
+
+  const [resultsDialogOpen, setRDO] = useState(false);
+  const openRsD = useCallback(() => setRDO(true), []);
+  const hideRsD = useCallback(() => setRDO(false), []);
+
+  const [results, setResults] = useState<TemplateFile[]>([]);
+  const emptyResults = useCallback(() => {
+    if (window.confirm(t('outputResult.emptyHistoryConfirm'))) {
+      setResults([]);
+    }
+  }, [t]);
+
+  // endregion
+
   const [resultAndDepsDialogOpen, setRADDO] = useState(false);
   const openRADD = useCallback(() => {
     setRADDO(true);
@@ -291,7 +310,8 @@ export default function Home() {
   const applyResult = useCallback((result: string) => {
     setResult(result);
     reloadResultEditor();
-  }, [reloadResultEditor]);
+    hideRsD();
+  }, [reloadResultEditor, hideRsD]);
 
   const depEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
     value: definitions,
@@ -352,21 +372,6 @@ export default function Home() {
     }
   }, [t, definitions, tplEditor, table, applyResult, setEM, openRADD]);
 
-  // region 输出模板日志
-
-  const [resultsDialogOpen, setRDO] = useState(false);
-  const openRsD = useCallback(() => setRDO(true), []);
-  const hideRsD = useCallback(() => setRDO(false), []);
-
-  const [results, setResults] = useState<TemplateFile[]>([]);
-  const emptyResults = useCallback(() => {
-    if (window.confirm(t('outputResult.emptyHistoryConfirm'))) {
-      setResults([]);
-    }
-  }, [t]);
-
-  // endregion
-
   // endregion
 
   return (
@@ -415,7 +420,7 @@ export default function Home() {
                       </ListItem>
                       {fields ?
                         fields.map((field, index) =>
-                          <ListItem key={index} button>
+                          <ListItem key={index}>
                             <ListItemText style={{paddingLeft: '20px'}}
                                           primary={`${field.name}${field.nullable ? '?' : ''}: ${field.type}`}
                                           secondary={field.comment} />
@@ -428,6 +433,11 @@ export default function Home() {
                   </div>
                   <div style={!!fields || !tables ? {display: 'none'} : {}} className="databases-wrapper">
                     <List component="nav">
+                      <ListItem>
+                        <TextField placeholder={t('connection.table.search.placeholder')}
+                                   value={tableNameKeywords}
+                                   onChange={e => setTableNameKeywords(e.target.value)}/>
+                      </ListItem>
                       <ListItem button onClick={() => setTables(undefined)}>
                         <ListItemText primary={
                           <div className="text-with-icon">
@@ -437,7 +447,7 @@ export default function Home() {
                         } />
                       </ListItem>
                       {tables ?
-                        tables.map((table, index) =>
+                        tables.filter(i => i.name && i.name.includes(tableNameKeywords)).map((table, index) =>
                           <ListItem key={index} button onClick={() => onTableClick(table)}>
                             <ListItemText style={{paddingLeft: '20px'}}
                                           primary={`${schema?.name}.${table.name}`}
@@ -545,10 +555,10 @@ export default function Home() {
           <div className="typo-with-right-button">
             <Typography variant="h6" color="textPrimary">{t('outputResult.historyDialog.title')}</Typography>
             <div className="buttons">
-              <Button variant={'contained'} color={'secondary'}
-                      onClick={hideRsD}>{t('outputResult.historyDialog.close')}</Button>
               <LoadingButton variant={'contained'}
                              onClick={emptyResults}>{t('outputResult.historyDialog.clear')}</LoadingButton>
+              <Button variant={'contained'} color={'secondary'}
+                      onClick={hideRsD}>{t('outputResult.historyDialog.close')}</Button>
             </div>
           </div>
           <div style={{padding: '5px 5px 0', margin: '5px 0 0'}}>

@@ -126,8 +126,6 @@ export default function TemplateFiles(props: TemplateFilesProps) {
       <div className="typo-with-right-button">
         <Typography variant="h6" color="textPrimary">{t('template.fileListDialog.title')}</Typography>
         <div className="buttons">
-          <Button variant={'contained'} color={'secondary'}
-                  onClick={onClose}>{t('template.fileListDialog.close')}</Button>
           <LoadingButton loading={loading}
                          variant={'contained'}
                          onClick={getTemplateFiles}>{t('template.fileListDialog.reload')}</LoadingButton>
@@ -138,6 +136,8 @@ export default function TemplateFiles(props: TemplateFilesProps) {
                            onClick={onConfirm}>{t('template.fileListDialog.confirm')}</LoadingButton>
             : <></>
           }
+          <Button variant={'contained'} color={'secondary'}
+                  onClick={onClose}>{t('template.fileListDialog.close')}</Button>
         </div>
       </div>
       <LoadingContainer style={{padding: '0 5px 0', margin: '0'}} loading={loading}>

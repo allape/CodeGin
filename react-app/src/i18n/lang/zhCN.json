@@ -21,6 +21,11 @@
         "injectionSecondary": "该操作将覆盖已有依赖",
         "export": "选择模板并导出结果"
       }
+    },
+    "table": {
+      "search": {
+        "placeholder": "模糊搜索表名"
+      }
     }
   },
   "dependency": {

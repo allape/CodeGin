@@ -21,6 +21,11 @@
         "injectionSecondary": "This operation will override existing dependencies",
         "export": "Select Template files and export results"
       }
+    },
+    "table": {
+      "search": {
+        "placeholder": "filter by table name"
+      }
     }
   },
   "dependency": {
