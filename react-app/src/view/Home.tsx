@@ -519,7 +519,7 @@ export default function Home() {
                         } />
                       </ListItem>
                       {tables ?
-                        tables.filter(i => i.name && i.name.includes(tableNameKeywords)).map((table, index) =>
+                        tables.filter(i => i.name && i.name.toLowerCase().includes(tableNameKeywords.toLowerCase())).map((table, index) =>
                           <ListItem key={index} button onClick={() => onTableClick(table)}>
                             <ListItemText style={{paddingLeft: '20px'}}
                                           primary={`${schema?.name}.${table.name}`}
