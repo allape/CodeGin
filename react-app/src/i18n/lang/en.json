@@ -55,6 +55,7 @@
       "close": "Close",
       "reload": "Reload",
       "confirm": "Export Results",
+      "confirmToolTips": "Check one template file to export",
       "filenamePlaceholder": "folder for output file",
       "outputFolderIsEmpty": "{{file.id}}'s output folder is empty"
     },

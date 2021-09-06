@@ -1,5 +1,16 @@
 import {TemplateFile} from '../model/template'
-import {Button, Checkbox, Dialog, List, ListItem, ListItemText, Paper, TextField, Typography} from '@material-ui/core'
+import {
+  Button,
+  Checkbox,
+  Dialog,
+  List,
+  ListItem,
+  ListItemText,
+  Paper,
+  TextField,
+  Tooltip,
+  Typography,
+} from '@material-ui/core'
 import LoadingContainer from '../component/loading/LoadingContainer'
 import DateString from '../component/date/DateString'
 import React, {useCallback, useEffect, useState} from 'react'
@@ -152,10 +163,12 @@ export default function TemplateFiles(props: TemplateFilesProps) {
                          variant={'contained'}
                          onClick={getTemplateFiles}>{t('template.fileListDialog.reload')}</LoadingButton>
           {!!onFileSelectWithFilename ?
-            <LoadingButton loading={loading} disabled={!hasFileSelected}
-                           variant={'contained'}
-                           color={'primary'}
-                           onClick={onConfirm}>{t('template.fileListDialog.confirm')}</LoadingButton>
+            <Tooltip title={t('template.fileListDialog.confirmToolTips').toString()}>
+              <LoadingButton loading={loading} disabled={!hasFileSelected}
+                             variant={'contained'}
+                             color={'primary'}
+                             onClick={onConfirm}>{t('template.fileListDialog.confirm')}</LoadingButton>
+            </Tooltip>
             : <></>
           }
           <Button variant={'contained'} color={'secondary'}

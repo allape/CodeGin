@@ -55,6 +55,7 @@
       "close": "关闭",
       "reload": "刷新",
       "confirm": "导出结果",
+      "confirmToolTips": "勾选后方可导出",
       "filenamePlaceholder": "文件夹路径",
       "outputFolderIsEmpty": "{{file.id}}的导出文件夹路径为空"
     },
