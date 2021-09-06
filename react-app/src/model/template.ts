@@ -1,19 +1,19 @@
-import {DEFINITION_IMPORT, PRESET_DEFINITIONS} from './definition';
-import {TFunction} from 'react-i18next';
-import Database, {Field, Table} from './database';
+import {DEFINITION_IMPORT, PRESET_DEFINITIONS} from './definition'
+import {TFunction} from 'react-i18next'
+import Database, {Field, Table} from './database'
 
 /**
  * 保存的模板文件
  */
 export interface TemplateFile {
   // 文件名称
-  id: string;
+  id: string
   // 内容
-  content: string;
+  content: string
   // 创建时间
-  createTime: number;
+  createTime: number
   // 修改时间
-  updateTime: number;
+  updateTime: number
 }
 
 /**
@@ -21,9 +21,9 @@ export interface TemplateFile {
  */
 export interface TemplateResult {
   // 结果
-  result: string;
+  result: string
   // 文件名称
-  filename?: string;
+  filename?: string
 }
 
 // 默认的内容
@@ -99,16 +99,16 @@ export const run = (t: TFunction, definitions: string, source: string): Template
   const sourceCode = `
         ${definitions.replace(/(?<=\n) *((import.+?;)|export )/g, '')}
         ${/*替换掉第一个import*/source.replace(/\s*(import.+?;)/, '')}
-      `;
-  console.log(sourceCode);
-  const result = new Function(sourceCode)() as TemplateResult;
+      `
+  console.log(sourceCode)
+  const result = new Function(sourceCode)() as TemplateResult
   if (result === undefined) {
-    throw new Error(t('template.noReturnStatement'));
+    throw new Error(t('template.noReturnStatement'))
   } else if (!result.result) {
-    throw new Error(t('template.noResultContent'));
+    throw new Error(t('template.noResultContent'))
   }
-  return result;
-};
+  return result
+}
 
 /**
  * 生成数据库依赖内容
@@ -139,4 +139,4 @@ export const fieldMap = ${JSON.stringify(fields.reduce((p, c) => ({...p, [c.name
 
 // ${t('template.default.presetFunctions')}
 ${PRESET_DEFINITIONS}
-`;
+`

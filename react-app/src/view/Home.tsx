@@ -1,7 +1,8 @@
-import React, {useCallback, useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react'
 import {
   Button,
-  ButtonGroup, Checkbox,
+  ButtonGroup,
+  Checkbox,
   Dialog,
   Divider,
   Grid,
@@ -15,196 +16,196 @@ import {
   Tabs,
   TextField,
   Tooltip,
-  Typography
-} from "@material-ui/core";
-import Database, {Field, Schema, Table} from '../model/database';
-import {getFields, getTableDDL, getTables, saveToFile, saveTplFile, stringifyError} from '../api/api';
-import LoadingButton from '../component/loading/LoadingButton';
-import LoadingContainer from '../component/loading/LoadingContainer';
-import {Alert} from '@material-ui/lab';
-import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace';
-import * as me from 'monaco-editor';
-import CodeEditor from '../component/code-editor/CodeEditor';
-import {DEFAULT_TEMPLATE, define, run, TemplateFile} from '../model/template';
-import DateString from '../component/date/DateString';
-import stringify from '../component/date/date';
-import usePromiseHandler from '../component/loading/promise-handler';
-import TemplateFiles, {TemplateFileSelector} from './TemplateFiles';
-import {useCounter} from 'react-loading-state';
-import {PRESET_DEFINITIONS} from '../model/definition';
-import useStorableState from '../component/storable-state/storable-state';
-import {useTranslation} from 'react-i18next';
-import ConnectForm from './ConnectForm';
-import ListIcon from '@material-ui/icons/List';
+  Typography,
+} from "@material-ui/core"
+import Database, {Field, Schema, Table} from '../model/database'
+import {getFields, getTableDDL, getTables, saveToFile, saveTplFile, stringifyError} from '../api/api'
+import LoadingButton from '../component/loading/LoadingButton'
+import LoadingContainer from '../component/loading/LoadingContainer'
+import {Alert} from '@material-ui/lab'
+import KeyboardBackspaceIcon from '@material-ui/icons/KeyboardBackspace'
+import * as me from 'monaco-editor'
+import CodeEditor from '../component/code-editor/CodeEditor'
+import {DEFAULT_TEMPLATE, define, run, TemplateFile} from '../model/template'
+import DateString from '../component/date/DateString'
+import stringify from '../component/date/date'
+import usePromiseHandler from '../component/loading/promise-handler'
+import TemplateFiles, {TemplateFileSelector} from './TemplateFiles'
+import {useCounter} from 'react-loading-state'
+import {PRESET_DEFINITIONS} from '../model/definition'
+import useStorableState from '../component/storable-state/storable-state'
+import {useTranslation} from 'react-i18next'
+import ConnectForm from './ConnectForm'
+import ListIcon from '@material-ui/icons/List'
 
 // 默认结果语言类型
-const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript';
+const DEFAULT_RESULT_LANGUAGE_TYPE = 'javascript'
 // 保存了的结果语言类型
-const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key';
+const RESULT_LANGUAGE_TYPE_STORAGE_KEY = 'result_language_type_storage_key'
 
 // 上一次进行输出结果的内容的key
-const LAST_TPL_STORAGE_KEY = 'last_tpl_storage_key';
+const LAST_TPL_STORAGE_KEY = 'last_tpl_storage_key'
 
 // 自动输出结果的checkbox的选中值的key
-const AUTO_PRINT_STORAGE_KEY = 'auto_print_storage_key';
+const AUTO_PRINT_STORAGE_KEY = 'auto_print_storage_key'
 
 // 结果内容支持语法高亮的语言
-const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())));
+const LANGUAGES = Array.from(new Set(me.languages.getLanguages().map(i => i.id.toLowerCase())))
 
 export default function Home() {
 
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
-  const defaultOkMessage = t('error.okContent');
+  const defaultOkMessage = t('error.okContent')
 
-  const [error, setError] = useState(false);
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState(false)
+  const [message, setMessage] = useState('')
 
-  const [promiseHandler, loading, , , errorMessage] = usePromiseHandler(stringifyError);
+  const [promiseHandler, loading, , , errorMessage] = usePromiseHandler(stringifyError)
 
   useEffect(() => {
     if (errorMessage) {
-      setMessage(errorMessage);
-      setError(true);
+      setMessage(errorMessage)
+      setError(true)
     } else {
-      setMessage(defaultOkMessage);
-      setError(false);
+      setMessage(defaultOkMessage)
+      setError(false)
     }
-  }, [errorMessage, defaultOkMessage]);
+  }, [errorMessage, defaultOkMessage])
 
-  const [errorMessageInDialogOpen, setErrMsgDO] = useState(false);
+  const [errorMessageInDialogOpen, setErrMsgDO] = useState(false)
   const openErrorMessageInDialog = useCallback(() => {
-    setErrMsgDO(true);
-  }, []);
+    setErrMsgDO(true)
+  }, [])
   const hideErrorMessageInDialog = useCallback(() => {
-    setErrMsgDO(false);
-  }, []);
+    setErrMsgDO(false)
+  }, [])
 
   // 注入到编辑器的依赖内容
-  const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS);
+  const [definitions, setDefinitions] = useState(PRESET_DEFINITIONS)
 
-  const [tab, setTab] = useState(0);
-  const handleTabChange = useCallback((e, nv) => setTab(nv), []);
+  const [tab, setTab] = useState(0)
+  const handleTabChange = useCallback((e, nv) => setTab(nv), [])
 
   // region 数据库
 
   // 连接了的数据库信息
-  const [database, setDatabase] = useState<Database | undefined>(undefined);
+  const [database, setDatabase] = useState<Database | undefined>(undefined)
   // 当前选中的schema
-  const [schema, setSchema] = useState<Schema | undefined>(undefined);
+  const [schema, setSchema] = useState<Schema | undefined>(undefined)
   // table列表
-  const [tables, setTables] = useState<Table[] | undefined>(undefined);
+  const [tables, setTables] = useState<Table[] | undefined>(undefined)
   // 当前选中的table
-  const [table, setTable] = useState<Table | undefined>(undefined);
+  const [table, setTable] = useState<Table | undefined>(undefined)
   // 当前选中的table的DDL信息
-  const [ddl, setDdl] = useState('');
+  const [ddl, setDdl] = useState('')
   // fields列表
-  const [fields, setFields] = useState<Field[] | undefined>(undefined);
+  const [fields, setFields] = useState<Field[] | undefined>(undefined)
 
   // table名字搜索
-  const [tableNameKeywords, setTableNameKeywords] = useState('');
+  const [tableNameKeywords, setTableNameKeywords] = useState('')
 
   const onConnectFormChange = useCallback((db?: Database) => {
-    setDatabase(db);
-  }, []);
+    setDatabase(db)
+  }, [])
 
   const onDisconnectButtonClick = useCallback(() => {
-    setDatabase(undefined);
-    setSchema(undefined);
-    setTables(undefined);
-    setTable(undefined);
-    setDdl('');
-    setFields(undefined);
-  }, []);
+    setDatabase(undefined)
+    setSchema(undefined)
+    setTables(undefined)
+    setTable(undefined)
+    setDdl('')
+    setFields(undefined)
+  }, [])
 
   // 将当前显示字段的表的数据导入编辑器依赖
   const setEditorDefinitions = useCallback(() => {
     if (!fields) {
-      setMessage(t('dependency.noTableData'));
-      setError(true);
-      return;
+      setMessage(t('dependency.noTableData'))
+      setError(true)
+      return
     } else {
-      setMessage(t('dependency.injectOk'));
-      setError(false);
+      setMessage(t('dependency.injectOk'))
+      setError(false)
     }
 
-    setDefinitions(define(t, database!, table!, fields, ddl));
-    setTab(0);
+    setDefinitions(define(t, database!, table!, fields, ddl))
+    setTab(0)
   }, [
     t,
     database, table, fields, ddl,
-  ]);
+  ])
   useEffect(() => {
     if (fields) {
-      setEditorDefinitions();
+      setEditorDefinitions()
     }
-  }, [fields, setEditorDefinitions]);
+  }, [fields, setEditorDefinitions])
 
   const onDatabaseClick = useCallback((schema: Schema) => {
-    setSchema(schema);
-    setTableNameKeywords('');
+    setSchema(schema)
+    setTableNameKeywords('')
     promiseHandler(getTables(schema.name!)).then(tables => {
-      setTables(tables);
-    });
-  }, [promiseHandler]);
+      setTables(tables)
+    })
+  }, [promiseHandler])
 
   const onTableClick = useCallback((table: Table) => {
-    setTable(table);
+    setTable(table)
     Promise.all([
       promiseHandler(getTableDDL(schema?.name!, table.name)),
       promiseHandler(getFields(schema?.name!, table.name)),
     ]).then(([ ddl, fields ]) => {
-      setDdl(ddl);
-      setFields(fields);
-    });
-  }, [schema, promiseHandler]);
+      setDdl(ddl)
+      setFields(fields)
+    })
+  }, [schema, promiseHandler])
 
   // region 直接解析模板并导出为结果文件
 
-  const [tplFileSelectorDialogOpen, setTFSelectorDO] = useState(false);
+  const [tplFileSelectorDialogOpen, setTFSelectorDO] = useState(false)
   const openTFSelectorD = useCallback(() => {
-    setTFSelectorDO(true);
-  }, []);
+    setTFSelectorDO(true)
+  }, [])
   const hideTFSelectorD = useCallback(() => {
-    setTFSelectorDO(false);
-  }, []);
+    setTFSelectorDO(false)
+  }, [])
 
   const onFileSelectWithFilename = useCallback((files: TemplateFileSelector[]) => {
     if (!fields) {
-      setMessage(t('dependency.noTableData'));
-      setError(true);
-      return;
+      setMessage(t('dependency.noTableData'))
+      setError(true)
+      return
     } else {
-      setMessage(defaultOkMessage);
-      setError(false);
+      setMessage(defaultOkMessage)
+      setError(false)
     }
     // 获取依赖
-    const definition = define(t, database!, table!, fields, ddl);
+    const definition = define(t, database!, table!, fields, ddl)
     // 根据模板文件进行导出
     try {
       for (const file of files) {
-        const result = run(t, definition, file.content);
+        const result = run(t, definition, file.content)
         if (!result.filename) {
-          setMessage(t('outputResult.hasNoFilename', { file }));
-          setError(true);
-          return;
+          setMessage(t('outputResult.hasNoFilename', { file }))
+          setError(true)
+          return
         }
         promiseHandler(saveToFile(file.__filename!, result.filename, result.result)).then(() => {
-          hideTFSelectorD();
-          setMessage(defaultOkMessage);
-          setError(false);
-        });
+          hideTFSelectorD()
+          setMessage(defaultOkMessage)
+          setError(false)
+        })
       }
-      alert(t('outputResult.exportSuccess'));
+      alert(t('outputResult.exportSuccess'))
     } catch (e) {
-      setMessage(stringifyError(e));
-      setError(true);
+      setMessage(stringifyError(e))
+      setError(true)
     }
   }, [
     t, defaultOkMessage,
     database, table, fields, ddl,
     promiseHandler, hideTFSelectorD,
-  ]);
+  ])
 
   // endregion
 
@@ -213,15 +214,15 @@ export default function Home() {
   // region 文本编辑器
 
   // 当前打开/编辑的文件名
-  const [tplFileName, setTplFileName] = useState('');
+  const [tplFileName, setTplFileName] = useState('')
 
-  const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
+  const [tplEditor, setTplEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined)
   const resetTplEditor = useCallback(() => {
     if (window.confirm(t('template.resetConfirm'))) {
-      tplEditor?.setValue(DEFAULT_TEMPLATE);
-      setTplFileName('');
+      tplEditor?.setValue(DEFAULT_TEMPLATE)
+      setTplFileName('')
     }
-  }, [t, tplEditor]);
+  }, [t, tplEditor])
   const tplEditorWillMount = useCallback(
     (monaco: typeof me): me.editor.IStandaloneEditorConstructionOptions => {
       monaco.languages.typescript.javascriptDefaults.setCompilerOptions({
@@ -231,105 +232,105 @@ export default function Home() {
         module: monaco.languages.typescript.ModuleKind.CommonJS,
         noEmit: true,
         typeRoots: ["node_modules/@types"],
-      });
+      })
       monaco.languages.typescript.javascriptDefaults.addExtraLib(
         definitions,
         'file:///node_modules/code-gin/index.js'
-      );
-      const content = tplEditor?.getValue() || localStorage.getItem(LAST_TPL_STORAGE_KEY) || DEFAULT_TEMPLATE;
-      console.log(content);
+      )
+      const content = tplEditor?.getValue() || localStorage.getItem(LAST_TPL_STORAGE_KEY) || DEFAULT_TEMPLATE
+      console.log(content)
       const model = me.editor.createModel(
         content,
         'javascript',
         me.Uri.parse(`file:///main-${Date.now()}.js`)
-      );
+      )
       return {
         model,
         minimap: {
           enabled: false,
         },
         language: 'javascript',
-      };
+      }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [definitions],
-    );
+    )
   const tplEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor, monaco: typeof me) => {
-    console.log('template editor did mount:', editor, monaco);
-    setTplEditor(editor);
-  }, []);
+    console.log('template editor did mount:', editor, monaco)
+    setTplEditor(editor)
+  }, [])
 
   // region 自动输出结果
 
-  const [autoGenerate, setAutoGenerate] = useState(!!localStorage.getItem(AUTO_PRINT_STORAGE_KEY));
+  const [autoGenerate, setAutoGenerate] = useState(!!localStorage.getItem(AUTO_PRINT_STORAGE_KEY))
   const setAutoGenerateProxy = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    setAutoGenerate(checked);
+    const checked = e.target.checked
+    setAutoGenerate(checked)
     if (checked) {
-      localStorage.setItem(AUTO_PRINT_STORAGE_KEY, `${Date.now()}`);
+      localStorage.setItem(AUTO_PRINT_STORAGE_KEY, `${Date.now()}`)
     } else {
-      localStorage.removeItem(AUTO_PRINT_STORAGE_KEY);
+      localStorage.removeItem(AUTO_PRINT_STORAGE_KEY)
     }
-  }, []);
+  }, [])
 
   // endregion
 
   // region 模板文件列表
 
-  const [onSavedFileSelected, triggerSavedFileSelected] = useCounter();
-  const [tplFilesDialogOpen, setTFDO] = useState(false);
-  const openTFD = useCallback(() => setTFDO(true), []);
-  const hideTFD = useCallback(() => setTFDO(false), []);
+  const [onSavedFileSelected, triggerSavedFileSelected] = useCounter()
+  const [tplFilesDialogOpen, setTFDO] = useState(false)
+  const openTFD = useCallback(() => setTFDO(true), [])
+  const hideTFD = useCallback(() => setTFDO(false), [])
 
   const loadTemplateFile = useCallback((file: TemplateFile) => {
     // if (window.confirm(t('template.loadFromFile', { file }))) {
-    tplEditor?.setValue(file.content);
-    setTplFileName(file.id);
-    hideTFD();
+    tplEditor?.setValue(file.content)
+    setTplFileName(file.id)
+    hideTFD()
     if (autoGenerate) {
-      triggerSavedFileSelected(1);
+      triggerSavedFileSelected(1)
     }
     // }
-  }, [tplEditor, hideTFD, autoGenerate, triggerSavedFileSelected]);
+  }, [tplEditor, hideTFD, autoGenerate, triggerSavedFileSelected])
 
   // endregion
 
   // region 保存模板文件
 
-  const [tplFileNameMessage, setTFNM] = useState('');
+  const [tplFileNameMessage, setTFNM] = useState('')
   // 模板文件名称输入弹窗
-  const [tplFileSaveDialogOpen, setTFSDO] = useState(false);
+  const [tplFileSaveDialogOpen, setTFSDO] = useState(false)
   const openTplFileDialog = useCallback(() => {
-    setTFSDO(true);
-  }, []);
+    setTFSDO(true)
+  }, [])
   const hideTplFileDialog = useCallback(() => {
-    setTFSDO(false);
-  }, []);
+    setTFSDO(false)
+  }, [])
 
   // 保存文件
   const doSaveTplFile = useCallback((filename: string, content: string) => {
     promiseHandler(saveTplFile(filename, content)).then(() => {
-      hideTplFileDialog();
-    });
-  }, [hideTplFileDialog, promiseHandler]);
+      hideTplFileDialog()
+    })
+  }, [hideTplFileDialog, promiseHandler])
   // 文件名提交
   const onTplFileDialogSubmit = useCallback((e) => {
-    e.preventDefault();
-    let filename: string = e.target.tplFileName?.value || '';
+    e.preventDefault()
+    let filename: string = e.target.tplFileName?.value || ''
     if (!filename) {
-      setTFNM(t('template.saveWithEmptyFileName'));
-      return;
+      setTFNM(t('template.saveWithEmptyFileName'))
+      return
     }
     if (!filename.endsWith('.js')) {
-      filename += '.js';
+      filename += '.js'
     }
-    setTplFileName(filename);
-    doSaveTplFile(filename, tplEditor?.getValue() || '');
-  }, [t, doSaveTplFile, tplEditor]);
+    setTplFileName(filename)
+    doSaveTplFile(filename, tplEditor?.getValue() || '')
+  }, [t, doSaveTplFile, tplEditor])
   // 保存
   const onTplFileSave = useCallback(() => {
-    openTplFileDialog();
-  }, [openTplFileDialog]);
+    openTplFileDialog()
+  }, [openTplFileDialog])
 
   // endregion
 
@@ -339,35 +340,35 @@ export default function Home() {
 
   // region 输出模板日志
 
-  const [resultsDialogOpen, setRDO] = useState(false);
-  const openRsD = useCallback(() => setRDO(true), []);
-  const hideRsD = useCallback(() => setRDO(false), []);
+  const [resultsDialogOpen, setRDO] = useState(false)
+  const openRsD = useCallback(() => setRDO(true), [])
+  const hideRsD = useCallback(() => setRDO(false), [])
 
-  const [results, setResults] = useState<TemplateFile[]>([]);
+  const [results, setResults] = useState<TemplateFile[]>([])
   const emptyResults = useCallback(() => {
     if (window.confirm(t('outputResult.emptyHistoryConfirm'))) {
-      setResults([]);
+      setResults([])
     }
-  }, [t]);
+  }, [t])
 
   // endregion
 
-  const [resultAndDepsDialogOpen, setRADDO] = useState(false);
+  const [resultAndDepsDialogOpen, setRADDO] = useState(false)
   const openRADD = useCallback(() => {
-    setRADDO(true);
-  } ,[]);
+    setRADDO(true)
+  } ,[])
   const hideRADD = useCallback(() => {
-    setRADDO(false);
-  } ,[]);
+    setRADDO(false)
+  } ,[])
 
-  const [resultReloadKey, reloadResultEditor] = useCounter();
-  const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined);
-  const [result, setResult] = useState('');
+  const [resultReloadKey, reloadResultEditor] = useCounter()
+  const [resultEditor, setResultEditor] = useState<me.editor.IStandaloneCodeEditor | undefined>(undefined)
+  const [result, setResult] = useState('')
   const applyResult = useCallback((result: string) => {
-    setResult(result);
-    reloadResultEditor();
-    hideRsD();
-  }, [reloadResultEditor, hideRsD]);
+    setResult(result)
+    reloadResultEditor()
+    hideRsD()
+  }, [reloadResultEditor, hideRsD])
 
   const depEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => ({
     value: definitions,
@@ -376,43 +377,43 @@ export default function Home() {
       enabled: false,
     },
     language: 'javascript',
-  }), [definitions]);
+  }), [definitions])
 
   const [resultType, setResultType] = useStorableState<string>(
     RESULT_LANGUAGE_TYPE_STORAGE_KEY,
     s => s || DEFAULT_RESULT_LANGUAGE_TYPE
-  );
+  )
   const onResultTypeChange = useCallback(e => {
-    const type = e.target.value;
-    setResultType(type);
-    window.localStorage.setItem(RESULT_LANGUAGE_TYPE_STORAGE_KEY, type);
-    applyResult(resultEditor?.getValue() || '');
-  }, [resultEditor, applyResult, setResultType]);
+    const type = e.target.value
+    setResultType(type)
+    window.localStorage.setItem(RESULT_LANGUAGE_TYPE_STORAGE_KEY, type)
+    applyResult(resultEditor?.getValue() || '')
+  }, [resultEditor, applyResult, setResultType])
 
   const resultEditorOptions = useMemo((): me.editor.IStandaloneEditorConstructionOptions => {
-    console.log('reload result editor:', resultReloadKey);
+    console.log('reload result editor:', resultReloadKey)
     return {
       value: result,
       minimap: {
         enabled: false,
       },
       language: resultType,
-    };
-  }, [resultType, result, resultReloadKey]);
+    }
+  }, [resultType, result, resultReloadKey])
   const resultEditorDidMount = useCallback((editor: me.editor.IStandaloneCodeEditor) => {
-    console.log('result editor mounted');
-    setResultEditor(editor);
-  }, []);
+    console.log('result editor mounted')
+    setResultEditor(editor)
+  }, [])
 
   const printResult = useCallback(() => {
     if (tplEditor) {
       try {
-        const tpl = tplEditor.getValue();
-        const result = run(t, definitions, tpl);
-        applyResult(result.result);
-        setMessage('');
-        setError(false);
-        setTab(1);
+        const tpl = tplEditor.getValue()
+        const result = run(t, definitions, tpl)
+        applyResult(result.result)
+        setMessage('')
+        setError(false)
+        setTab(1)
 
         // 添加历史记录
         setResults(olds => [{
@@ -420,34 +421,34 @@ export default function Home() {
           content: result.result,
           createTime: Date.now(),
           updateTime: Date.now(),
-        }, ...olds]);
-        localStorage.setItem(LAST_TPL_STORAGE_KEY, tpl);
-        openRADD();
-        setMessage(defaultOkMessage);
-        setError(false);
+        }, ...olds])
+        localStorage.setItem(LAST_TPL_STORAGE_KEY, tpl)
+        openRADD()
+        setMessage(defaultOkMessage)
+        setError(false)
       } catch (e) {
-        setMessage(stringifyError(e));
-        setError(true);
+        setMessage(stringifyError(e))
+        setError(true)
       }
     } else {
-      setMessage(t('template.editorNotInitializedYet'));
-      setError(true);
+      setMessage(t('template.editorNotInitializedYet'))
+      setError(true)
     }
   }, [
     t, defaultOkMessage,
     definitions, tplEditor,
     table, applyResult,
     openRADD,
-  ]);
+  ])
 
   // endregion
 
   useEffect(() => {
     if (onSavedFileSelected > 0) {
-      triggerSavedFileSelected(0);
-      printResult();
+      triggerSavedFileSelected(0)
+      printResult()
     }
-  }, [printResult, onSavedFileSelected, triggerSavedFileSelected]);
+  }, [printResult, onSavedFileSelected, triggerSavedFileSelected])
 
   return (
     <div className="code-generator-wrapper">
@@ -666,5 +667,5 @@ export default function Home() {
       </Dialog>
 
     </div>
-  );
+  )
 }

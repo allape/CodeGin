@@ -9781,6 +9781,11 @@ react-transition-group@^4.4.0:
     loose-envify "^1.4.0"
     prop-types "^15.6.2"
 
+react-use-stateless@^0.9.0:
+  version "0.9.0"
+  resolved "https://registry.yarnpkg.com/react-use-stateless/-/react-use-stateless-0.9.0.tgz#f492f991885647833dfcd8e2811c031b6e1c0dcc"
+  integrity sha512-2hB01yGa7MvhOs8tnDwgY1fQ3Xm60EQiIvorUzKrQOlHd7aWu3nidSNMsc3U6OQVrRx9J+yuMoVFq0wiabDGWg==
+
 react@^17.0.2:
   version "17.0.2"
   resolved "https://registry.yarnpkg.com/react/-/react-17.0.2.tgz#d0b5cc516d29eb3eee383f75b62864cfb6800037"

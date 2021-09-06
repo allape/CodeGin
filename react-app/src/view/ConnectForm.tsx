@@ -1,38 +1,38 @@
-import {Button, Dialog, Grid, Paper, TextField, Typography} from '@material-ui/core';
-import LoadingButton from '../component/loading/LoadingButton';
-import React, {FormEvent, useCallback, useState} from 'react';
-import {useTranslation} from 'react-i18next';
-import {Connection} from '../model/connection';
-import {connect} from '../api/api';
-import {PromiseHandlerFunction} from '../component/loading/promise-handler';
-import Database from '../model/database';
+import {Button, Dialog, Grid, Paper, TextField, Typography} from '@material-ui/core'
+import LoadingButton from '../component/loading/LoadingButton'
+import React, {FormEvent, useCallback, useState} from 'react'
+import {useTranslation} from 'react-i18next'
+import {Connection} from '../model/connection'
+import {connect} from '../api/api'
+import {PromiseHandlerFunction} from '../component/loading/promise-handler'
+import Database from '../model/database'
 
 // 保存连接信息的key
-const CONNECTION_STORAGE_KEY = 'connection_storage_key';
+const CONNECTION_STORAGE_KEY = 'connection_storage_key'
 // 默认回填的数据
 const DEFAULT_VALUE: Connection = (() => {
   try {
-    const fromCache = window.localStorage.getItem(CONNECTION_STORAGE_KEY);
+    const fromCache = window.localStorage.getItem(CONNECTION_STORAGE_KEY)
     if (fromCache) {
-      const result = JSON.parse(fromCache);
-      if (result) return result;
+      const result = JSON.parse(fromCache)
+      if (result) return result
     }
   } catch (e) {
-    console.error('error occurred while parsing stored connection info:', e);
+    console.error('error occurred while parsing stored connection info:', e)
   }
   return {
     host: 'localhost',
     port: 3306,
     username: 'root',
     password: undefined,
-  };
-})();
+  }
+})()
 
 export interface ConnectFormProps {
-  loading?: boolean;
-  promiseHandler?: PromiseHandlerFunction;
-  onChange?: (db?: Database) => void;
-  onDisconnect?: () => void;
+  loading?: boolean
+  promiseHandler?: PromiseHandlerFunction
+  onChange?: (db?: Database) => void
+  onDisconnect?: () => void
 }
 
 export default function ConnectForm(props: ConnectFormProps) {
@@ -41,54 +41,54 @@ export default function ConnectForm(props: ConnectFormProps) {
     promiseHandler,
     onChange,
     onDisconnect,
-  } = props;
+  } = props
 
   // 连接信息
-  const [conn, setConn] = useState<Connection | undefined>(undefined);
+  const [conn, setConn] = useState<Connection | undefined>(undefined)
 
   const onConnectionInfoSubmit = useCallback((e: FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    const target: any = e.target;
-    const data: Connection = Object.keys(DEFAULT_VALUE).reduce((p, c) => ({ ...p, [c]: target[c]?.value }), {});
+    const target: any = e.target
+    const data: Connection = Object.keys(DEFAULT_VALUE).reduce((p, c) => ({ ...p, [c]: target[c]?.value }), {})
 
-    const newErrors: Record<string, boolean> = {};
+    const newErrors: Record<string, boolean> = {}
 
     if (!data.host) {
-      newErrors.host = true;
+      newErrors.host = true
     } else if (!data.port) {
-      newErrors.port = true;
+      newErrors.port = true
     }
 
-    setErrors(newErrors);
+    setErrors(newErrors)
 
     if (Object.keys(newErrors).length) {
-      return;
+      return
     }
 
-    setConn(data);
-    window.localStorage.setItem(CONNECTION_STORAGE_KEY, JSON.stringify(data));
+    setConn(data)
+    window.localStorage.setItem(CONNECTION_STORAGE_KEY, JSON.stringify(data))
 
     if (onChange && promiseHandler) {
-      onChange(undefined);
+      onChange(undefined)
       promiseHandler(connect(data)).then(db => {
-        onChange(db);
-      });
+        onChange(db)
+      })
     }
-  }, [promiseHandler, onChange]);
+  }, [promiseHandler, onChange])
 
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   // 连接信息表单错误信息
-  const [errors, setErrors] = useState<Record<string, boolean>>({});
+  const [errors, setErrors] = useState<Record<string, boolean>>({})
 
   // 断开连接按钮点击时
   const onDisconnectProxy = useCallback(() => {
-    setConn(undefined);
+    setConn(undefined)
     if (onDisconnect) {
-      onDisconnect();
+      onDisconnect()
     }
-  }, [onDisconnect]);
+  }, [onDisconnect])
 
   return <div className={'connect-form-wrapper'}>
     <Dialog open={!conn}>
@@ -124,5 +124,5 @@ export default function ConnectForm(props: ConnectFormProps) {
     </Dialog>
     <Button style={{opacity: conn ? 1 : 0}} variant="contained" color="secondary"
             onClick={onDisconnectProxy}>{t('connection.disconnect')}</Button>
-  </div>;
+  </div>
 }
