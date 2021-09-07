@@ -458,7 +458,7 @@ export default function Home() {
             <div className={'message-wrapper'}>{message}</div>
             <Dialog open={errorMessageInDialogOpen}
                     onBackdropClick={hideErrorMessageInDialog} onClose={hideErrorMessageInDialog}>
-              <div style={{padding: '10px'}}>{errorMessage || t('error.okContent')}</div>
+              <div style={{padding: '20px'}}>{errorMessage || t('error.okContent')}</div>
             </Dialog>
           </Alert>
           <Paper>
