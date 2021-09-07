@@ -452,14 +452,14 @@ export default function Home() {
 
   return (
     <div className="code-generator-wrapper">
+      <Dialog open={errorMessageInDialogOpen}
+              onBackdropClick={hideErrorMessageInDialog} onClose={hideErrorMessageInDialog}>
+        <div style={{padding: '20px'}}>{message || t('error.okContent')}</div>
+      </Dialog>
       <Grid container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
           <Alert className="alert-wrapper" severity={error ? 'error' : 'success'} onClick={openErrorMessageInDialog}>
             <div className={'message-wrapper'}>{message}</div>
-            <Dialog open={errorMessageInDialogOpen}
-                    onBackdropClick={hideErrorMessageInDialog} onClose={hideErrorMessageInDialog}>
-              <div style={{padding: '20px'}}>{errorMessage || t('error.okContent')}</div>
-            </Dialog>
           </Alert>
           <Paper>
             <div className="typo-with-right-button">
