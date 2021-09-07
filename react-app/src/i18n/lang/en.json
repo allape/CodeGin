@@ -68,7 +68,7 @@
     "saveFileToXXXButton": "Save to {{filename}}...",
     "resetEditor": "Reset",
     "generate": "Generate",
-    "autoGenerate": "Generate after select saved template file"
+    "autoGenerate": "Generate after selected a saved template file"
   },
   "outputResult": {
     "emptyHistoryConfirm": "Are you sure you want to empty result history?",
