@@ -87,7 +87,7 @@
     "start": "REACT_APP_STAGE=devlopment PORT=3001 node scripts/start.js",
     "start-production": "REACT_APP_STAGE=production PORT=3001 node scripts/start.js",
     "prebuild": "node prebuild.js",
-    "build": "REACT_APP_STAGE=production PUBLIC_URL=\"./\" node scripts/build.js",
+    "build": "GENERATE_SOURCEMAP=false REACT_APP_STAGE=production PUBLIC_URL=\"./\" node scripts/build.js",
     "postbuild": "node postbuild.js",
     "test": "node scripts/test.js"
   },
