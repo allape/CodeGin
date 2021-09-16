@@ -7,7 +7,7 @@
   "connection": {
     "title": "Connection Info",
     "host": "Host",
-    "post": "Port",
+    "port": "Port",
     "username": "Username",
     "password": "Password",
     "connect": "Connect",

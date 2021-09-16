@@ -1,7 +1,11 @@
-![CodeGin](./resources/icon.png)
-# CodeGin | 代码生成器 | Code Generator
+# ![CodeGin](./resources/icon-40x40.png) CodeGin | 代码生成器 | Code Generator
 
-### 技术栈 | Technologies
+### 截图 | Screenshots
+![Screenshot1](./resources/screenshots/screenshot-1.png)
+![Screenshot3](./resources/screenshots/screenshot-3.png)
+![Screenshot4](./resources/screenshots/screenshot-4.png)
+
+### 技术栈 | Specs
 - [react](https://reactjs.org/)
 - [typescript](http://typescriptlang.org/)
 - [monaco-editor](https://github.com/microsoft/monaco-editor)
@@ -9,7 +13,7 @@
 - [mysql](https://www.mysql.com/)
 - [golang](https://golang.org/)
 
-### 开发必要工具 | Environments requirements
+### 开发必要工具 | Environments
 - [git](https://git-scm.com/)
 - [nodejs](https://nodejs.org/)
 - [golang](https://golang.org/)

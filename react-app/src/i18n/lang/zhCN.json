@@ -7,7 +7,7 @@
   "connection": {
     "title": "连接信息",
     "host": "Host",
-    "post": "Port",
+    "port": "Port",
     "username": "账号",
     "password": "密码",
     "connect": "连接",
