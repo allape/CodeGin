@@ -8,7 +8,7 @@ import {
   Grid,
   List,
   ListItem,
-  ListItemText,
+  ListItemText, ListSubheader,
   MenuItem,
   Paper,
   Select,
@@ -456,7 +456,7 @@ export default function Home() {
               onBackdropClick={hideErrorMessageInDialog} onClose={hideErrorMessageInDialog}>
         <div style={{padding: '20px'}}>{message || t('error.okContent')}</div>
       </Dialog>
-      <Grid container spacing={2}>
+      <Grid className="main-grid" container spacing={2}>
         <Grid item xs={12} lg={4} xl={3}>
           <Alert className="alert-wrapper" severity={error ? 'error' : 'success'} onClick={openErrorMessageInDialog}>
             <div className={'message-wrapper'}>{message}</div>
@@ -469,12 +469,13 @@ export default function Home() {
                              onChange={onConnectFormChange} onDisconnect={onDisconnectButtonClick}/>
               </div>
             </div>
-            <LoadingContainer style={{padding: '0 5px 5px'}} loading={loading}>
+            <LoadingContainer loading={loading}>
               {database ?
-                <div className="database-wrapper">
+                <div className={`database-wrapper ${loading ? 'loading' : ''}`}>
                   <Typography className="connection-name" color="textSecondary">{database.name}</Typography>
                   <Divider />
-                  <div style={!fields ? {display: 'none'} : {}} className="databases-wrapper">
+                  {/* 字段 */}
+                  <div style={!fields ? {display: 'none'} : {}} className="list-wrapper">
                     <List component="nav">
                       <ListItem button onClick={() => setFields(undefined)}>
                         <ListItemText primary={
@@ -504,13 +505,14 @@ export default function Home() {
                       }
                     </List>
                   </div>
-                  <div style={!!fields || !tables ? {display: 'none'} : {}} className="databases-wrapper">
+                  {/* 表 */}
+                  <div style={!!fields || !tables ? {display: 'none'} : {}} className="list-wrapper">
                     <List component="nav">
-                      <ListItem>
+                      <ListSubheader className="solid-sub-header">
                         <TextField placeholder={t('connection.table.search.placeholder')}
-                                   value={tableNameKeywords}
+                                   value={tableNameKeywords} type="search"
                                    onChange={e => setTableNameKeywords(e.target.value)}/>
-                      </ListItem>
+                      </ListSubheader>
                       <ListItem button onClick={() => setTables(undefined)}>
                         <ListItemText primary={
                           <div className="text-with-icon">
@@ -532,7 +534,8 @@ export default function Home() {
                       }
                     </List>
                   </div>
-                  <div style={!!tables ? {display: 'none'} : {}} className="databases-wrapper">
+                  {/* 数据库 */}
+                  <div style={!!tables ? {display: 'none'} : {}} className="list-wrapper">
                     <List component="nav">
                       {database.schemas.map((schema, index) =>
                         <ListItem key={index} button

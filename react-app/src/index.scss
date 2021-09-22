@@ -77,16 +77,37 @@ body {
 
 .code-generator-wrapper {
   padding: 5px 5px;
+  .main-grid {
+    .MuiGrid-item:not(:last-of-type) {
+      padding-right: 0;
+    }
+  }
   .database-wrapper {
+    padding: 0 5px 5px;
     .connection-name {
       white-space: nowrap;
       text-overflow: ellipsis;
       overflow: hidden;
     }
-    .databases-wrapper {
+    .list-wrapper {
       height: calc(100vh - 20px - 140px - 15px - 20px - 20px - 1px);
       overflow-y: auto;
       overflow-x: hidden;
+      .solid-sub-header {
+        background-color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 5px 16px;
+        transition: .25s;
+      }
+    }
+    &.loading {
+      .list-wrapper {
+        .solid-sub-header {
+          opacity: 0;
+        }
+      }
     }
   }
   .MuiPaper-root {
@@ -120,7 +141,7 @@ body {
     justify-content: flex-start;
     align-items: center;
     .icon {
-      margin: 0 5px;
+      margin: 0 5px 0 -2px;
     }
   }
   .editor-wrapper {
