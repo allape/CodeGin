@@ -6,13 +6,10 @@
   "scripts": {
     "windows-start-prepare": "node pre.js && .\\go-build.bat",
     "macos-start-prepare": "node pre.js && chmod +x ./go-build.sh && ./go-build.sh",
-
     "start": "electron .",
     "start-web": "ELEC_APP_TYPE=web electron .",
-
     "prepack-windows": "npm run-script windows-start-prepare",
     "pack-windows": "electron-packager . CodeGin --icon=./icon.ico --platform=win32 --arch=x64 --out=build --overwrite",
-
     "prepack-macos": "npm run-script macos-start-prepare",
     "pack-macos": "electron-packager . CodeGin --icon=./icon.icns --platform=darwin --arch=x64 --out=build --overwrite"
   },
@@ -26,6 +23,6 @@
     "electron-packager": "^15.2.0"
   },
   "dependencies": {
-    "mysql": "^2.18.1"
+    "mysql2": "^2.3.3"
   }
 }
